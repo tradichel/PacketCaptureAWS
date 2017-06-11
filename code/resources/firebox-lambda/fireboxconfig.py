@@ -31,7 +31,6 @@ def configure_firebox(event, context):
 
     #####
     # Connect to Firebox via CLI
-    ###
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
     c = paramiko.SSHClient()
     
@@ -50,7 +49,6 @@ def configure_firebox(event, context):
         print("connected to " + fireboxip)
 
         channel = c.invoke_shell()
-        command="configure\n"
         channel.send(commands)
         time.sleep(3)
 
