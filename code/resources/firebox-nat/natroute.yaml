@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox NAT Route"
+Parameters: 
+  
+  ParamStackName: 
+    Type: String
+    Default: "firebox-trial"
+    Description: "Name used in resource tags and names"
+
+Resources:
+  
+  #Route all traffic to the firebox
+  #that is destined for teh Interent
+  #from the web server subnet
+  FireboxNATRoute:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      NetworkInterfaceId: 
+        !ImportValue FireboxWebServerNetworkInterface
+      RouteTableId: 
+        !ImportValue WebServerRouteTable
+
+  FireboxNATRouteCLI:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      NetworkInterfaceId: 
+        !ImportValue FireboxWebServerNetworkInterface
+      RouteTableId: 
+        !ImportValue FireboxManagementRouteTable
+

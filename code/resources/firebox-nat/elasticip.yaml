@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Elastic IP"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Default: "firebox-trial"
+    Description: "Name used in resource tags and names"
+Resources:
+  FireboxElasticIP:
+    Type: AWS::EC2::EIP
+  FireboxEIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: 
+        !GetAtt FireboxElasticIP.AllocationId
+      NetworkInterfaceId:
+        !ImportValue FireboxPublicNetworkInterface
+  

@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Lambda CLI Role"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+Resources:
+  FireboxCliRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      RoleName: "FireboxLambdaCLIRole"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "lambda.amazonaws.com"
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+
+  FireboxRolePolicy: 
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "FireboxLambdaCLIS3Policy"
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Action: 
+              - "s3:GetObject"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+          - 
+            Effect: "Allow"
+            Action: 
+              - "s3:ListBucket"
+            Resource: !ImportValue FireboxPrivateBucketArn
+      Roles: 
+        - 
+          !Ref FireboxCliRole
+Outputs:
+  FireboxLambdaCLIRoleArn:
+    Description: ARN of FireboxLambdaCLIRoleArn
+    Value: !GetAtt FireboxCliRole.Arn
+    Export:
+      Name: "FireboxLambdaCLIRoleArn"

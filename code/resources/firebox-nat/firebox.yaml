@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Cloud"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamFireboxAMI:
+    Type: String
+  ParamInstanceType: 
+    Type: String
+    Description: Allowed instance type for Firebox Cloud AMI.
+  ParamKeyName: 
+    Type: String
+    Description: "EC2 Key Pair name for CLI Commands over SSH"
+Resources:
+  FireboxPublicNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Firebox Public Network Interface
+      GroupSet:
+        - !ImportValue FireboxPublicSecurityGroup
+      SubnetId: !ImportValue FireboxPublicSubnet
+      SourceDestCheck: false
+  FireboxManagementNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Firebox Management Network Interface
+      GroupSet: 
+        - !ImportValue FireboxManagementEniSecurityGroup
+      SubnetId: !ImportValue FireboxManagementSubnet
+      SourceDestCheck: false
+  FireboxWebServerNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Firebox Web Server Network Interface
+      GroupSet: 
+        - !ImportValue FireboxWebServerEniSecurityGroup
+      SubnetId: !ImportValue WebServerSubnet
+      SourceDestCheck: false
+  Firebox: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: 
+        Ref: ParamFireboxAMI
+      InstanceType:
+        Ref: ParamInstanceType
+      NetworkInterfaces:
+        - NetworkInterfaceId:
+            Ref: FireboxPublicNetworkInterface
+          DeviceIndex: '0'
+        - NetworkInterfaceId:
+            Ref: FireboxManagementNetworkInterface
+          DeviceIndex: '1'
+        - NetworkInterfaceId:
+            Ref: FireboxWebServerNetworkInterface
+          DeviceIndex: '2'
+      KeyName: !Ref ParamKeyName
+      Tags:
+        - Key: Name
+          Value: FireboxCloud
+        - Key: Stack
+          Value: !Ref ParamStackName
+Outputs:
+  FireboxManagementNetworkInterface:
+    Value: !Ref FireboxManagementNetworkInterface
+    Export:
+      Name: "FireboxManagementNetworkInterface"
+  FireboxPublicNetworkInterface:
+    Value: !Ref FireboxPublicNetworkInterface
+    Export:
+      Name: "FireboxPublicNetworkInterface"
+  FireboxWebServerNetworkInterface:
+    Value: !Ref FireboxWebServerNetworkInterface
+    Export:
+      Name: "FireboxWebServerNetworkInterface"
+  Firebox:
+    Value: !Ref Firebox
+    Export:
+      Name: "Firebox"
+  FireboxManagementPrivateIpAddress:
+    Value: !GetAtt FireboxManagementNetworkInterface.PrimaryPrivateIpAddress
+    Export:
+      Name: "FireboxPrimaryManagementIpAddress"

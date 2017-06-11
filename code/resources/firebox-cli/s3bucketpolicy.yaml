@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Private Bucket Policy"
+Parameters:
+  ParamStackName: 
+    Type: String
+    Description: "Stack name used in tags and such"
+  ParamAdminUser: 
+    Type: String
+    Description: "User allowed to upload files to bucket"
+  ParamAdminCidr: 
+    Type: String
+    Default: "0.0.0.0/0" 
+    Description: "CIDR allowed to upload files to bucket"
+Resources:
+  FireboxPrivateBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties: 
+      Bucket: 
+        !ImportValue FireboxPrivateBucket
+      PolicyDocument: 
+        Statement: 
+          - 
+            Sid: DenyIncorrectEncryptionHeader
+            Action: 
+              - "s3:PutObject"
+            Effect: "Deny"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+            Principal: "*"
+            Condition: 
+              StringNotEquals: 
+                s3:x-amz-server-side-encryption: 
+                  - "AES256"
+          - 
+            Sid: DenyUnEncryptedObjectUploads
+            Action: 
+              - "s3:PutObject"
+            Effect: "Deny"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+            Principal: "*"
+            Condition: 
+              StringEquals: 
+                s3:x-amz-server-side-encryption: 
+                  - !Ref AWS::NoValue
+          - 
+            Sid: DenyNoMFAonUpload
+            Action:
+              - "s3:PutObject"
+            Effect: "Deny"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+            Principal: "*"
+            Condition: 
+              BoolIfExists: 
+                aws:MultiFactorAuthPresent: 
+                  - false
+              NumericGreaterThan:
+                aws:MultiFactorAuthAge: 
+                  - 3600
+          - 
+            Sid: Firebox Admin User
+            Action:
+              - "s3:*"
+            Effect: "Allow"
+            Resource: 
+              - !ImportValue FireboxPrivateBucketResourcesArn
+              - !ImportValue FireboxPrivateBucketArn
+            Principal: 
+              AWS:
+                Fn::Join: 
+                  - ""
+                  -
+                    - "arn:aws:iam::"
+                    - !Ref AWS::AccountId
+                    - ":user/"
+                    - !Ref ParamAdminUser
+            Condition: 
+              IpAddress: 
+                aws:SourceIp: 
+                  - !Ref ParamAdminCidr
+              BoolIfExists: 
+                aws:MultiFactorAuthPresent: 
+                  - true
+          - 
+            Sid: AllowLambaCLIRoleGet
+            Action:
+              - "s3:GetObject"
+            Effect: "Allow"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+            Principal: 
+              AWS: !ImportValue FireboxLambdaCLIRoleArn
+          - 
+            Sid: AllowLambaCLIRoleGet
+            Action:
+              - "s3:GetObject"
+            Effect: "Deny"
+            Resource: !ImportValue FireboxPrivateBucketResourcesArn
+            Principal: 
+              AWS: !ImportValue FireboxLambdaCLIRoleArn
+            Condition: 
+              StringNotEquals:  
+                aws:sourceVpce: 
+                  !ImportValue FireboxCLIS3Endpoint
+          - 
+            Sid: AllowLambaCLIRoleGetObject
+            Action:
+              - "s3:ListBucket"
+            Effect: "Allow"
+            Resource: !ImportValue FireboxPrivateBucketArn
+            Principal: 
+              AWS: !ImportValue FireboxLambdaCLIRoleArn
+
+

@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Cloud Subnets"
+Parameters: 
+
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+
+Resources:
+
+  #The management route table has access to firebox,
+  #local VCP and S3 endpoint will be added
+  #no Internet route and no route with 0.0.0.0/0
+  #will be added as management should never leave 
+  #the local VPC
+  FireboxManagementRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: !ImportValue FireboxVPC
+  
+  #The public route table has Interent Access
+  #via an Internet Gateway route
+  #Only the firebox should be in this subnet
+  #to ensure all traffic must go through
+  #the Firebox to get in our out of the VPC
+  FireboxPublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: !ImportValue FireboxVPC
+  FireboxPublicInternetGatewayRoute:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !ImportValue FireboxInternetGateway
+      RouteTableId: !Ref FireboxPublicRouteTable
+  
+  #The private route table directs all 
+  #Internet bound traffic to the Firebox
+  #ENI via a route added when the Firebox 
+  #is created. This subnet would be for hosts
+  #that are allowed to contact the Internet
+  WebServerRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties: 
+      VpcId: !ImportValue FireboxVPC
+
+Outputs:
+  FireboxPublicRouteTable:
+    Value: !Ref FireboxPublicRouteTable
+    Export:
+      Name: "FireboxPublicRouteTable"
+  FireboxManagementRouteTable:
+    Value: !Ref FireboxManagementRouteTable
+    Export:
+      Name: "FireboxManagementRouteTable"
+  WebServerRouteTable:
+    Value: !Ref WebServerRouteTable
+    Export:
+      Name: "WebServerRouteTable"

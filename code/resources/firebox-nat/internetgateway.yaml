@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Internet Gateway"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Default: "firebox-trial"
+    Description: "Name used in resource tags and names"
+Resources:
+  FireboxInternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+  FireboxInternetGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties: 
+      InternetGatewayId: 
+        Ref: FireboxInternetGateway
+      VpcId: 
+        !ImportValue FireboxVPC
+Outputs:
+  FireboxInternetGateway:
+    Value: !Ref FireboxInternetGateway
+    Export:
+      Name: "FireboxInternetGateway"

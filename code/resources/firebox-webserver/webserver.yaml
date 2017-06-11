@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Packet Capture: Test Web Server"
+Parameters: 
+  ParamAmi:
+    Type: String
+  ParamInstanceType: 
+    Type: String
+    Default: "t2.micro"
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamKeyName: 
+    Type: String
+    Description: "EC2 Key Pair name for CLI Commands over SSH"
+Resources:
+  WebServer: 
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !Ref ParamAmi
+      InstanceType: !Ref ParamInstanceType
+      SubnetId: !ImportValue WebServerSubnet
+      SecurityGroupIds: 
+        - !ImportValue WebServerSecurityGroup
+        - !ImportValue S3CidrSecurityGroup
+      UserData:
+        Fn::Base64: 
+            !Sub |
+              !Join 
+                [ ":", 
+                  [ 
+                    #!/bin/bash -xe
+                    exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+                    #use firebox as NTP server
+                    fireboxntp=,
+                    !ImportValue:firebox-nat-firebox.FireboxManagementPrivateIpAddress,
+                    ntpsrv="amazon.pool.ntp.org" 
+                    sudo sed -i "s/0.$ntpserv/$fireboxntp/g" /etc/ntp.conf
+                    sudo sed -i "s/1.$ntpserv//g" /etc/ntp.conf
+                    sudo sed -i "s/2.$ntpserv//g" /etc/ntp.conf
+                    sudo sed -i "s/3.$ntpserv//g" /etc/ntp.conf
+                    sudo service ntpd start
+                    ntpstat
+                    #install web server
+                    sudo yum update
+                    sudo yum -y install httpd
+                  ] 
+                ]
+      Tags:
+        - Key: Name
+          Value: TestWebServerForAWSPacketCapture
+        - Key: Stack
+          Value: !Ref ParamStackName
+Outputs:
+  WebServer:
+    Value: !Ref WebServer
+    Export:
+      Name: "WebServer"
+  WebServerIPAddress:
+    Value: !GetAtt WebServer.PrivateIp
+    Export:
+      Name: "WebServerIPAddress"

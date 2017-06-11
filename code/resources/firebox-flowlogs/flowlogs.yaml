@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Flowlogs"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamResourceType:
+    Type: String
+    Description: VPC, Subnet, or Network Interface ID
+    Default: VPC
+    AllowedValues: 
+      - VPC
+      - Subnet
+      - NetworkInterface
+  ParamFlowLogName: 
+    Type: String
+    Default: "firebox-flow-logs"
+    Description: "Name of log group in CloudWatch"
+Resources:
+  FireboxFlowlogs:
+    Type: "AWS::EC2::FlowLog"
+    Properties:
+      DeliverLogsPermissionArn: 
+        !ImportValue FireboxFlowLogsRoleArn
+      LogGroupName: 
+        Ref: ParamFlowLogName
+      ResourceId: 
+        !ImportValue FireboxVPC
+      ResourceType: 
+        Ref: ParamResourceType
+      TrafficType: "ALL"
+
+

@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Private Bucket for Sensitive Data"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+Resources:
+  #Bucket for storing bucket access logs
+  FireboxLogBucket:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: 
+        !Join [ "-", [ "firebox-log-bucket", !Ref "AWS::AccountId", !Ref "AWS::Region" ] ]
+      AccessControl: LogDeliveryWrite
+      #http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket-lifecycleconfig-rule.html
+      LifecycleConfiguration:
+        Rules:
+          -
+            Id: ExpirationDaysRule
+            ExpirationInDays: 7
+            Status: Enabled
+  FireboxPrivateBucket:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: 
+        !Join [ "-", [ "firebox-private-cli-bucket", !Ref "AWS::AccountId", !Ref "AWS::Region" ] ]
+      LoggingConfiguration:
+        DestinationBucketName: !Ref FireboxLogBucket
+        LogFilePrefix: firebox-bucket-logs
+Outputs:
+  FireboxPrivateBucket:
+    Description: Firebox Private Bucket
+    Value: !Ref FireboxPrivateBucket
+    Export:
+      Name: FireboxPrivateBucket
+  FireboxPrivateBucketArn:
+    Description: Firebox Private Bucket
+    Value: 
+      !Join [ "", [ "arn:aws:s3:::", !Ref FireboxPrivateBucket ] ]
+    Export:
+      Name: FireboxPrivateBucketArn
+  FireboxPrivateBucketResourcesArn:
+    Description: Firebox Private Bucket
+    Value: 
+      !Join [ "", [ "arn:aws:s3:::", !Ref FireboxPrivateBucket, "/*" ] ]
+    Export:
+      Name: FireboxPrivateBucketResourcesArn
+  FireboxLogBucket:
+    Description: Firebox Log Bucket
+    Value: 
+      !Ref FireboxLogBucket
+    Export:
+      Name: FireboxLogBucket
+  FireboxLogBucketArn:
+    Description: Firebox Log Bucket
+    Value: 
+      !Join [ "", [ "arn:aws:s3:::", !Ref FireboxPrivateBucket ] ]
+    Export:
+      Name: FireboxLogBucketArn
+  FireboxLogBucketResourcesArn:
+    Description: Firebox Log Bucket
+    Value: 
+      !Join [ "", [ "arn:aws:s3:::", !Ref FireboxPrivateBucket, "/*" ] ]
+    Export:
+      Name: FireboxLogBucketResourcesArn
