@@ -53,12 +53,22 @@ echo "* ------------------------------------------------------"
 
 if [ "$action" != "delete" ]
 then
-    #todo: add this back to bucket policy
-    yourip=$(curl -s http://whatismyip.akamai.com/)
+    
+    yourip=$(curl -s https://whatismyip.akamai.com/)
+    if ["$yourip" == ""]; then
+        echo "Error retrieving your IP address from whatismyip.akami.com. Try https://www.whatismyip.com. Enter your IP /32 e.g. x.x.x.x/32"
+    fi
     echo "Enter the Admin IP range (default: $yourip/32 < Your IP based on a query to http://whatismyip.akamai.com/)"
     read adminips
-    if [ "$adminips" = "" ]; then adminips="$yourip/32"; fi
-
+    if [ "$adminips" == "" ]; then 
+        if [ "$yourip" == "" ]; then
+            echo "Must enter Admin IP range allowed to administer Firebox"
+            exit
+        else
+            adminips="$yourip/32"; 
+        fi
+    fi
+    
     echo "* ------------------------------------------------------"
     echo "Retrieving list of Firebox Cloud AMIs..."
     fireboxami=$(get_latest_firebox_ami)

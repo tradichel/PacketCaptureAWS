@@ -31,12 +31,9 @@ def configure_firebox(event, context):
 
     #####
     # Connect to Firebox via CLI
+    ###
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
     c = paramiko.SSHClient()
-    
-    commands="configure\n" \
-        "global-setting report-data enable\n" \
-        "snat websnat static-nat external-addr External $webserverip port 80\n"
 
     try:
 
@@ -49,32 +46,31 @@ def configure_firebox(event, context):
         print("connected to " + fireboxip)
 
         channel = c.invoke_shell()
-        channel.send(commands)
+        command="configure\n"
+        channel.send(command)
         time.sleep(3)
-
-        #channel = c.invoke_shell()
-        #command="configure\n"
-        #channel.send(command)
-        #time.sleep(3)
         
         #send feedback to WatchGUard for Security Report
         #https://www.watchguard.com/wgrd-resource-center/security-report
-        #command="global-setting report-data enable\n"
-        #channel.send(command)
-        #time.sleep(3)
+        command="global-setting report-data enable\n"
+        channel.send(command)
+        time.sleep(3)
+        
         #make Firebox an NTP server
         #http://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/basicadmin/NTP_server_enable_add_c.html
-        #command="ntpdevice-as-server enable\n"
-        #channel.send(command)
-        #time.sleep(3)
-  
-        #configure an snat for the web server
-        #snat websnat static-nat external-addr External 10.0.2.44 port 80
-        #snat webserversnat static-nat external-ip 52.32.116.182 10.0.2.44 port 80
-        #command="snat websnat static-nat external-addr External $webserverip port 80\n"
-        #channel.send(command)
-        #time.sleep(3)
+        command="ntp enable\n"
+        channel.send(command)
+        time.sleep(3)
 
+        command="ntp device-as-server enable\n"
+        channel.send(command)
+        time.sleep(3)
+  
+        #create https policy that allows traffic
+        #in to our web servers on the optional interface
+        # on port 80
+        #TODO
+        
         output=channel.recv(2024)
         print(output)
 

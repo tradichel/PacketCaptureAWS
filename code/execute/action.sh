@@ -2,8 +2,7 @@
 action=$1; adminuser=$2; admincidr=$3; adminuserarn=$4; ami=$5; instancetype=$6; linuxami=$7
 
 keyname="firebox-cli-ec2-key"
-webkeyname="webserver-key"
-packetserverkeyname="packetserver-key"
+
 #gettig the S3 cidrs is a bit messy so separating this out and doing it 
 #one time for all places it is required
 s3cidrparams=$(./execute/get_s3_ips.sh $region)
@@ -71,7 +70,11 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr ParameterKey=ParamAdminUser,ParameterValue=$adminuser";return
     fi
  
-    if [ "$stack" == "securitygroups" ]; then
+    if [ "$stack" == "sgssh" ]; then
+        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
+    fi
+
+    if [ "$stack" == "sgpubliceni" ]; then
 
         #####
         #  
@@ -104,7 +107,7 @@ function get_parameters(){
         parameters="$parameters $(get_ip_parameters 'tdr-fbla-na')"
         parameters="$parameters $(get_ip_parameters 'web.repauth')"
         
-        echo "$stackparameter $parameters"
+        echo "$stackparameter $parameters ParameterKey=ParamAdminCidr,ParameterValue=$admincidr"
         return
 
     fi 
@@ -123,24 +126,24 @@ function get_parameters(){
     fi
 
     if [ "$stack" == "packetcaptureserver" ]; then
-        echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$packetserverkeyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
+        echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$keyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
     fi  
 
     if [ "$stack" == "webserver" ]; then
-        echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$webkeyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
+        echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$keyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
     fi  
 
     #getting the S3 CIDRS is a bit messy. Putting that in a separate script
-    if [ "$stack" == "s3cidrsecuritygroup" ]; then
+    if [ "$stack" == "sgs3cidrs" ]; then
         echo "$stackparameter $s3cidrparams";return
     fi
 
-    if [ "$stack" == "publicsubnet" ]; then
+    if [ "$stack" == "sbpublic" ]; then
         echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
-    if [ "$stack" == "managementsubnet" ] || [ "$stack" == "webserversubnet" ]; then
-        echo "$stackparameter $s3cidrparams";return
+    if [ "$stack" == "sbmanagement" ] || [ "$stack" == "sbwebserver" ]; then
+        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
     echo "$stackparameter"
@@ -226,13 +229,6 @@ if [ "$action" == "delete" ]; then
 
     ./execute/delete_files.sh
 
-    stack=(     
-        "flowlogs"
-        "flowlogsrole"
-    )
-    
-    modify_stack $action "flowlogs" stack[@] 
-
     stack=(
         "lambda"
         "kmskey"
@@ -242,40 +238,42 @@ if [ "$action" == "delete" ]; then
 
     stack=(
         "webserver"
-        "webservernetwork"
+        "packetcaptureserver"
     )
 
-    modify_stack $action "webserver" stack[@] 
+    modify_stack $action "instances" stack[@] 
 
     stack=(
-        "packetcaptureserver"
         "s3endpointegress"
         "s3endpoint"
         "s3bucketpolicy"
         "clirole"
         "s3bucket"
-        "clinetwork"
-    )
+     )
 
     modify_stack $action "cli" stack[@] 
 
     stack=(
-
-        
+        "flowlogs"
+        "flowlogsrole"
         "natroute" 
         "elasticip"
         "firebox"
-        "s3cidrsecuritygroup"
-        "securitygroups"
-        "webserversubnet"
-        "publicsubnet"
-        "managementsubnet"
+        "sgs3cidrs"
+        "sgssh"
+        "sgmanagementeni"
+        "sgpubliceni"
+        "sgwebservereni"
+        "sbwebserver"
+        "sgwebserver"
+        "sbpublic"
+        "sbmanagement"
         "routetables"
         "internetgateway"
         "vpc"
     )
 
-    modify_stack $action "nat" stack[@] 
+    modify_stack $action "network" stack[@] 
 
     ./execute/keypair.sh $action $keyname
 
@@ -288,54 +286,44 @@ else #create/update
         "vpc" 
         "internetgateway"
         "routetables"
-        "managementsubnet"
-        "managementenisecuritygroup"
-        "webserversubnet"
-        "webserverenisecuritygroup"
-        "publicsubnet"
-        "publicenisecuritygroup"
-        "s3cidrsecuritygroup"
+        "sbwebserver"
+        "sgwebservereni"
+        "sgwebserver"
+        "sbmanagement"
+        "sgmanagement"
+        "sbpublic"
+        "sgpubliceni"
+        "sgs3cidrs"
+        "sgssh"
+        "flowlogsrole" 
+        "flowlogs"
         "firebox"
         "elasticip"
         "natroute"
     )
+    modify_stack $action "network" stack[@] 
 
-    modify_stack $action "nat" stack[@] 
-
-        stack=(
-        "webservernetwork"
-        "webserver"
-    )
-
-    modify_stack $action "webserver" stack[@] 
-
-    
     stack=(
-        "clinetwork"
         "s3bucket"
         "clirole"
         "s3endpoint"
         "s3bucketpolicy"
         "s3endpointegress"
-        "packetcaptureserver"
     )
-
     modify_stack $action "cli" stack[@] 
-
+    
     ./execute/upload_files.sh $keyname
 
     stack=(
-        "flowlogsrole" 
-        "flowlogs"
+        "packetcaptureserver"
+        "webserver"
     )
-
-    modify_stack $action "flowlogs" stack[@] 
+    modify_stack $action "instances" stack[@] 
 
     stack=(
         "kmskey"
         "lambda"
     )
-
     modify_stack $action "lambda" stack[@] 
     
 fi

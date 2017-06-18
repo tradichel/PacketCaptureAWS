@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ManagementEniSecurityGroup
+
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Default: firebox-trial
+    Description: Name used in resource tags and names
+  ParamCLIPort: 
+    Type: String
+    Default: 4118
+    Description: Open port for CLI access to Firebox on port 4118
+
+Resources:
+  #security group for lambda or instances thant manage firebox
+  #access to S3 bucket not granted to Firebox or anything else
+  FireboxManagementSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Firebox Management and Key Access"
+      VpcId: 
+        !ImportValue FireboxVPC
+      Tags:
+      - Key: Name
+        Value: FireboxManagementSecurityGroup
+      - Key: Stack
+        Value: 
+          !Ref ParamStackName
+
+  #Management security group associated with Firebox Cloud Management ENI
+  FireboxManagementEniSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Firebox Management ENI Security Group
+      VpcId: !ImportValue FireboxVPC
+      #allow any traffic on port 123 from the VPC CIDR
+      SecurityGroupIngress:
+        - CidrIp: !ImportValue FireboxVPCCidr
+          FromPort: 123
+          ToPort: 123
+          IpProtocol: "udp"
+        - SourceSecurityGroupId: !Ref FireboxManagementSecurityGroup
+          FromPort: !Ref ParamCLIPort
+          ToPort: !Ref ParamCLIPort
+          IpProtocol: "tcp"
+        - SourceSecurityGroupId: !Ref FireboxManagementSecurityGroup
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: "tcp"
+      SecurityGroupEgress:
+        - DestinationSecurityGroupId: !Ref FireboxManagementSecurityGroup
+          FromPort: 22
+          ToPort: 22
+          IpProtocol: "tcp"
+      Tags:
+      - Key: Name
+        Value: FireboxManagementEniSecurityGroup
+      - Key: Stack
+        Value: 
+          Ref: ParamStackName   
+
+  ManagementSecurityGroupEgressCLI:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref FireboxManagementSecurityGroup
+      DestinationSecurityGroupId:
+        !Ref FireboxManagementEniSecurityGroup
+      IpProtocol: "tcp"
+      FromPort: !Ref ParamCLIPort
+      ToPort: !Ref ParamCLIPort
+    
+  ManagementSecurityGroupEgressUDP:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref FireboxManagementSecurityGroup
+      DestinationSecurityGroupId:
+        !Ref FireboxManagementEniSecurityGroup
+      IpProtocol: "udp"
+      FromPort: 123
+      ToPort: 123
+
+Outputs:
+  FireboxManagementEniSecurityGroup:
+    Value: !Ref FireboxManagementEniSecurityGroup
+    Export:
+      Name: FireboxManagementEniSecurityGroup
+  FireboxManagementSecurityGroup:
+    Value: !Ref FireboxManagementSecurityGroup
+    Export:
+      Name: "FireboxManagementSecurityGroup"

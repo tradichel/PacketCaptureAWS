@@ -1,0 +1,427 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox Cloud Subnets"
+Parameters: 
+
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamManagementSubnetCidr: 
+    Type: String
+    Default: "10.0.1.0/24"
+    Description: "CIDR block for Management subnet"
+  #s3 cidrs open for yum updates
+  params3cidr0:
+    Type: String
+  params3cidr1:
+    Type: String
+    Default: ""
+  params3cidr2:
+    Type: String
+    Default: ""
+  params3cidr3:
+    Type: String
+    Default: ""
+  params3cidr4:
+    Type: String
+    Default: ""
+  params3cidr5:
+    Type: String
+    Default: ""
+  params3eastcidr0:
+    Type: String
+    Default: ""
+  params3eastcidr1:
+    Type: String
+    Default: ""
+  params3eastcidr2:
+    Type: String
+    Default: ""
+  params3eastcidr3:
+    Type: String
+    Default: ""
+  ParamAdminCidr: 
+    Type: String
+    Description: "Admin IP Address to allow inbound CLI connections"
+  
+
+Conditions:
+  #make sure all the IPs exist before we attempt to create
+  #rules for them. This handles some, but not all, DNS changes\
+  conds3cidr0: !Not [ !Equals [ !Ref params3cidr0, ""  ] ]
+  conds3cidr1: !Not [ !Equals [ !Ref params3cidr1, "" ] ]
+  conds3cidr2: !Not [ !Equals [ !Ref params3cidr2, "" ] ]
+  conds3cidr3: !Not [ !Equals [ !Ref params3cidr3, "" ] ]
+  conds3cidr4: !Not [ !Equals [ !Ref params3cidr4, "" ] ]
+  conds3cidr5: !Not [ !Equals [ !Ref params3cidr5, "" ] ]
+
+  conds3eastcidr0: !Not [ !Equals [ !Ref params3eastcidr0, ""  ] ]
+  conds3eastcidr1: !Not [ !Equals [ !Ref params3eastcidr1, "" ] ]
+  conds3eastcidr2: !Not [ !Equals [ !Ref params3eastcidr2, "" ] ]
+  conds3eastcidr3: !Not [ !Equals [ !Ref params3eastcidr3, "" ] ]
+
+Resources:
+
+  FireboxManagementSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue FireboxVPC
+      CidrBlock: 
+        !Ref ParamManagementSubnetCidr
+      AvailabilityZone: 
+        !Select 
+          - 1
+          - !GetAZs ""
+      Tags:
+      - Key: Name
+        Value: FireboxManagementSubnet
+      - Key: Stack
+        Value: !Ref ParamStackName
+  
+  FireboxManagementRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties: 
+      RouteTableId: !ImportValue FireboxManagementRouteTable
+      SubnetId: !Ref FireboxManagementSubnet
+
+  ManagementSubnetNacl:
+    Type: "AWS::EC2::NetworkAcl"
+    Properties:
+      Tags:
+        - Key: Name
+          Value: ManagementSubnetNacl
+        - Key: Stack
+          Value: 
+            !Ref ParamStackName
+      VpcId: !ImportValue FireboxVPC
+  
+  ManagementSubnetNaclAssociation:
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    Properties:
+      SubnetId: !Ref FireboxManagementSubnet
+      NetworkAclId: !Ref ManagementSubnetNacl
+
+  NaclS3Egress0:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref params3cidr0
+      Egress: true
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1002" 
+
+  NaclS3Egress1:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr1
+    Properties: 
+      CidrBlock: !Ref params3cidr1
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1003" 
+
+  NaclS3Egress2:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr2
+    Properties: 
+      CidrBlock: !Ref params3cidr2
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1004" 
+
+  NaclS3Egress3:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr3
+    Properties: 
+      CidrBlock: !Ref params3cidr3
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1005" 
+
+  NaclS3Egress4:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr4
+    Properties: 
+      CidrBlock: !Ref params3cidr4
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1006" 
+
+  NaclS3Egress5:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr5
+    Properties: 
+      CidrBlock: !Ref params3cidr5
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1007" 
+
+  NaclS3Egress5:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr5
+    Properties: 
+      CidrBlock: !Ref params3cidr5
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1007" 
+
+  NaclS3EastEgress0:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr0
+    Properties: 
+      CidrBlock: !Ref params3eastcidr0
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1008" 
+
+  NaclS3EastEgress1:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr1
+    Properties: 
+      CidrBlock: !Ref params3eastcidr1
+      Egress: true 
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1009" 
+
+  NaclS3EgressEgress2:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr2
+    Properties: 
+      CidrBlock: !Ref params3eastcidr2
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1010" 
+
+  NaclS3EgressEgress3:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr3
+    Properties: 
+      CidrBlock: !Ref params3eastcidr3
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      Egress: true 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      RuleAction : "Allow" 
+      RuleNumber : "1011" 
+
+#SSH for admin
+  NaclSSHIngress:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref ParamAdminCidr
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 22
+         To: 22
+      RuleAction : "Allow" 
+      RuleNumber : "2000" 
+      
+  FireboxIntressEphemeral:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: 0.0.0.0/0 
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2001" 
+
+  NaclS3Ingress0:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref params3cidr0
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2002" 
+
+  NaclS3Ingress1:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr1
+    Properties: 
+      CidrBlock: !Ref params3cidr1
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2003" 
+
+  NaclS3Ingress2:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr2
+    Properties: 
+      CidrBlock: !Ref params3cidr2
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2004" 
+
+  NaclS3Ingress3:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr3
+    Properties: 
+      CidrBlock: !Ref params3cidr3
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2005" 
+
+  NaclS3Ingress4:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr4
+    Properties: 
+      CidrBlock: !Ref params3cidr4
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2006" 
+
+  NaclS3Ingress5:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3cidr5
+    Properties: 
+      CidrBlock: !Ref params3cidr5
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2007" 
+    
+  #us-west-east
+  NaclS3Ingresseast0:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr0
+    Properties: 
+      CidrBlock: !Ref params3eastcidr0
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2008" 
+  
+  NaclS3Ingresseast1:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr1
+    Properties: 
+      CidrBlock: !Ref params3eastcidr1
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2009" 
+
+  NaclS3Ingresseast2:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr2
+    Properties: 
+      CidrBlock: !Ref params3eastcidr2
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2010" 
+
+  NaclS3Ingresseast3:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Condition: conds3eastcidr3
+    Properties: 
+      CidrBlock: !Ref params3eastcidr3
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 1024
+         To: 65535
+      RuleAction : "Allow" 
+      RuleNumber : "2011" 
+
+Outputs:
+  FireboxManagementSubnet:
+    Value: !Ref FireboxManagementSubnet
+    Export:
+      Name: "FireboxManagementSubnet"

@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Firebox Cloud SSH Security Group
+
+Parameters: 
+
+  ParamStackName: 
+    Type: String
+    Default: firebox-trial
+    Description: Name used in resource tags and names
+  ParamAdminCidr: 
+    Type: String
+    Description: "Admin IP Address to allow inbound CLI connections"
+  
+Resources:
+
+  SSHAdminSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SSH Admin Security Group
+      SecurityGroupIngress: 
+      - CidrIp: !Ref ParamAdminCidr2
+        IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+      SecurityGroupIngress: 
+      - CidrIp: !ImportValue FireboxVPCCidr
+        IpProtocol: tcp
+        FromPort: 123
+        ToPort: 123
+      VpcId: !ImportValue FireboxVPC
+      Tags:
+      - Key: Name
+        Value: SSHAdminSecurityGroup
+      - Key: Stack
+        Value: 
+          Ref: ParamStackName
+
+Outputs:
+
+  SSHSecurityGroup:
+    Value: !Ref SSHAdminSecurityGroup
+    Export:
+      Name: SSHAdminSecurityGroup

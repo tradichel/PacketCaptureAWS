@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Packet Capture Server"
+Parameters: 
+  ParamAmi:
+    Type: String
+  ParamInstanceType: 
+    Type: String
+    Default: "t2.micro"
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamKeyName: 
+    Type: String
+    Description: "EC2 Key Pair name for CLI Commands over SSH"
+    
+Resources:
+  
+  PacketServerRoleProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Roles:
+        - FireboxLambdaCLIRole
+      InstanceProfileName: PacketServerRoleProfile
+
+  PacketCaptureServer:
+    Type: "AWS::EC2::Instance"
+    Properties: 
+      ImageId: !Ref ParamAmi
+      InstanceType: !Ref ParamInstanceType
+      SubnetId: !ImportValue FireboxManagementSubnet
+      IamInstanceProfile: !Ref PacketServerRoleProfile
+      KeyName: !Ref ParamKeyName
+      SecurityGroupIds: 
+        - !ImportValue FireboxManagementSecurityGroup
+        - !ImportValue S3CidrSecurityGroup
+        - !ImportValue SSHAdminSecurityGroup
+      UserData:
+        Fn::Base64: !Sub 
+          - | 
+            #!/bin/bash -xe
+            exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            yum update -y
+            echo ${fireboxmanagementip}
+            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
+            chmod 700 /tmp/${fireboxkey}
+            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
+            echo "tcpdump -x" >> /tmp/fb.sh
+            chmod 700 /tmp/fb.sh
+            ./tmp/fb.sh
+            ntpsrv="amazon.pool.ntp.org" 
+            sed -i "s/0.$ntpserv/{$fireboxmanagementip}/g" /etc/ntp.conf
+            sed -i "s/1.$ntpserv//g" /etc/ntp.conf
+            sed -i "s/2.$ntpserv//g" /etc/ntp.conf
+            sed -i "s/3.$ntpserv//g" /etc/ntp.conf
+            service ntpd start
+            ntpstat
+          -
+            fireboxmanagementip: 
+              'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
+            fireboxkey: 
+              'firebox-cli-ec2-key.pem'
+            fireboxkeybucket: 
+              'Fn::ImportValue': 'FireboxPrivateBucket'
+      Tags:
+        - Key: Name
+          Value: PacketCaptureServer
+        - Key: Stack
+          Value: !Ref ParamStackName
+Outputs:
+  PacketCaptureServer:
+    Value: !Ref PacketCaptureServer
+    Export:
+      Name: "PacketCaptureServer"
+  WebServerIPAddress:
+    Value: !GetAtt PacketCaptureServer.PrivateIp
+    Export:
+      Name: "PacketCaptureServerPrivateIp"
