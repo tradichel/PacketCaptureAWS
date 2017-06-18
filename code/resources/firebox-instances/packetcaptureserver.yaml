@@ -15,6 +15,22 @@ Parameters:
     
 Resources:
   
+  PacketCaptureInstanceNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Packet Capture Instance Network Interface
+      GroupSet:
+        - !ImportValue FireboxManagementSecurityGroup
+        - !ImportValue S3CidrSecurityGroup
+        - !ImportValue SSHAdminSecurityGroup
+      SubnetId: !ImportValue FireboxManagementSubnet
+      SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: PacketCaptureInstanceEni
+        - Key: Stack
+          Value: !Ref ParamStackName
+          
   PacketServerRoleProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
@@ -27,33 +43,31 @@ Resources:
     Properties: 
       ImageId: !Ref ParamAmi
       InstanceType: !Ref ParamInstanceType
-      SubnetId: !ImportValue FireboxManagementSubnet
       IamInstanceProfile: !Ref PacketServerRoleProfile
+      NetworkInterfaces:
+        - NetworkInterfaceId:
+            Ref: PacketCaptureInstanceNetworkInterface
+          DeviceIndex: '0'
       KeyName: !Ref ParamKeyName
-      SecurityGroupIds: 
-        - !ImportValue FireboxManagementSecurityGroup
-        - !ImportValue S3CidrSecurityGroup
-        - !ImportValue SSHAdminSecurityGroup
       UserData:
         Fn::Base64: !Sub 
           - | 
             #!/bin/bash -xe
             exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
             yum update -y
-            echo ${fireboxmanagementip}
-            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
-            chmod 700 /tmp/${fireboxkey}
-            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
-            echo "tcpdump -x" >> /tmp/fb.sh
-            chmod 700 /tmp/fb.sh
-            ./tmp/fb.sh
             ntpsrv="amazon.pool.ntp.org" 
-            sed -i "s/0.$ntpserv/{$fireboxmanagementip}/g" /etc/ntp.conf
+            sed -i "s/0.$ntpserv/${fireboxmanagementip}/g" /etc/ntp.conf
             sed -i "s/1.$ntpserv//g" /etc/ntp.conf
             sed -i "s/2.$ntpserv//g" /etc/ntp.conf
             sed -i "s/3.$ntpserv//g" /etc/ntp.conf
+            cat /etc/ntp.conf
             service ntpd start
             ntpstat
+            
+            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
+            chmod 700 /tmp/${fireboxkey}
+            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
+            aws s3 cp (tcpdump -x)>s3://${logbucket}/tcpdump.txt
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
@@ -61,6 +75,8 @@ Resources:
               'firebox-cli-ec2-key.pem'
             fireboxkeybucket: 
               'Fn::ImportValue': 'FireboxPrivateBucket'
+            logbucket:
+              'Fn::ImportValue': 'FireboxLogBucket'
       Tags:
         - Key: Name
           Value: PacketCaptureServer

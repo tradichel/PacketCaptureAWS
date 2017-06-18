@@ -22,6 +22,11 @@ Resources:
         - !ImportValue SSHAdminSecurityGroup
       SubnetId: !ImportValue FireboxPublicSubnet
       SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: FireboxPublicEni
+        - Key: Stack
+          Value: !Ref ParamStackName
   FireboxManagementNetworkInterface:
     Type: "AWS::EC2::NetworkInterface"
     Properties: 
@@ -31,6 +36,11 @@ Resources:
         - !ImportValue SSHAdminSecurityGroup
       SubnetId: !ImportValue FireboxManagementSubnet
       SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: FireboxManagementEni
+        - Key: Stack
+          Value: !Ref ParamStackName
   FireboxWebServerNetworkInterface:
     Type: "AWS::EC2::NetworkInterface"
     Properties: 
@@ -40,6 +50,11 @@ Resources:
         - !ImportValue SSHAdminSecurityGroup
       SubnetId: !ImportValue WebServerSubnet
       SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: FireboxWebServerEni
+        - Key: Stack
+          Value: !Ref ParamStackName
   Firebox: 
     Type: "AWS::EC2::Instance"
     Properties: 

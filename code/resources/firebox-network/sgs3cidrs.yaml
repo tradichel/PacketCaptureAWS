@@ -59,7 +59,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: S3 Cidr Security Group
-      #TODO: verify no ingress created
+      #No ingress should be created by default
       SecurityGroupEgress: 
       - CidrIp: !Ref params3cidr0
         IpProtocol: tcp

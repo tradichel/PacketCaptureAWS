@@ -13,32 +13,54 @@ Parameters:
     Type: String
     Description: "EC2 Key Pair name for CLI Commands over SSH"
 Resources:
+
+  WebServerNetworkInterface:
+    Type: "AWS::EC2::NetworkInterface"
+    Properties: 
+      Description: Web Server Network Interface
+      GroupSet:
+        - !ImportValue WebServerSecurityGroup
+        - !ImportValue S3CidrSecurityGroup
+        - !ImportValue SSHAdminSecurityGroup
+      SubnetId: !ImportValue WebServerSubnet
+      SourceDestCheck: false
+      Tags:
+        - Key: Name
+          Value: WebServerEni
+        - Key: Stack
+          Value: !Ref ParamStackName
+          
   WebServer: 
     Type: "AWS::EC2::Instance"
     Properties: 
       ImageId: !Ref ParamAmi
       InstanceType: !Ref ParamInstanceType
-      SubnetId: !ImportValue WebServerSubnet
       KeyName: !Ref ParamKeyName
-      SecurityGroupIds: 
-        - !ImportValue WebServerSecurityGroup
-        - !ImportValue S3CidrSecurityGroup
-        - !ImportValue SSHAdminSecurityGroup
+      NetworkInterfaces:
+        - NetworkInterfaceId:
+            Ref: WebServerNetworkInterface
+          DeviceIndex: '0'
       UserData:
         Fn::Base64: 
-          !Sub |
+          !Sub 
+          - | 
             #!/bin/bash -xe
             exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
             yum update
             yum -y install httpd
             service httpd start
             ntpsrv="amazon.pool.ntp.org" 
-            sed -i "s/0.$ntpserv/34.211.9.125/g" /etc/ntp.conf
+            sed -i "s/0.$ntpserv/${fireboxmanagementip}/g" /etc/ntp.conf
             sed -i "s/1.$ntpserv//g" /etc/ntp.conf
             sed -i "s/2.$ntpserv//g" /etc/ntp.conf
             sed -i "s/3.$ntpserv//g" /etc/ntp.conf
+            cat /etc/ntp.conf
             service ntpd start
             ntpstat
+          -
+            fireboxmanagementip: 
+              'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
+          
       Tags:
         - Key: Name
           Value: TestWebServerForAWSPacketCapture
