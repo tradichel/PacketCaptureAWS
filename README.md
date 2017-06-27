@@ -4,20 +4,20 @@ Questions? DM me @TeriRadichel on Twitter.
 
 About This Repo:
 
-    [TODO]
-
-    This code creates a FireboxCloud on AWS, some networking and captures packets to an S3 bucket.
-
-    WatchGuard Firebox Cloud has two avaialble AMIs. This code requires an instance which has three or more interfaces, which means a c4.large instance at this time on AWS.
-
-    Pay As You Go With 30 day trial - supports t2.micro, c4.large and up:
-    https://aws.amazon.com/marketplace/pp/B06XJ9YTMF?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
-
-    BYOL - supports c4.large and up: 
-    https://aws.amazon.com/marketplace/pp/B06XJ9NQY3?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
-
-    AWS Network Interfaces on EC2 instance sizes:
-    http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html
+    This repo creates the following AWS resources:
+  
+    - WatchGuard Firebox Cloud with three network interfaces
+        - public Internet connected interface
+        - private management interface
+        - web server interface
+    - An EC2 key to connect to the Firebox
+    - S3 bucket and policy for key, lambda code
+    - S3 bucket and policy for log files
+    - A lambda function to configure the Firebox
+    - KMS key for lambda function to encrypt variables
+    - A packet capture instance that leverages the Firebox CLI
+    - A Web Server to test packet capture
+    - All the necessary networking and IAM resources
 
 Before You Run This Script:
 
@@ -45,6 +45,47 @@ Before You Run This Script:
     Activate The Firebox AMI In Your Account:
     http://websitenotebook.blogspot.com/2017/05/manually-activating-watchguard-firebox.html
 
+
+Run the code:
+
+    Log into the console using MFA.
+
+    Navigate to PacketCaptureAWS/code folder
+
+    type ./run.sh
+
+    At the prompt, type 1 and hit enter:
+
+        Please select action:
+        1) Create/Update
+        2) Delete
+        3) Cancel
+        #? 
+
+    The code will tell you the region your CLI is configured to use:
+
+        ***
+        * Begin: Mon Jun 26 21:20:00 HST 2017
+        * ---- NOTE --------------------------------------------
+        * Your CLI is configured for region:  us-west-2
+        * Resources will be created in this region.
+        * Switch to this region in console when you login.
+        * ------------------------------------------------------
+
+    When it asks if you want to use the default options type y and hit enter:
+
+       * Would you like to use all the default options? (Y)
+    
+    Watch the screen for updates.
+
+    Log into the console to see CloudFormation scripts being executed and resources being created.
+
+    If you want to change the default settings you can just hit enter when it asks if you want to use the default options. You will be given a series of prompts where you can enter the neccessary information.
+
+    When you are done testing run the script again and enter 2 to delete all the resources that were created.
+
+    Check the console to make sure they were successfully deleted.
+    
     ----
 
     Additional Info
