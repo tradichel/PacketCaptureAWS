@@ -76,15 +76,15 @@ Run the code:
 
        * Would you like to use all the default options? (Y)
     
+    If you want to change defaults, hit enter above. Read prompts.
+
     Watch the screen for updates.
 
-    Log into the console to see CloudFormation scripts being executed and resources being created.
+    Log into the console to see what was created.
 
-    If you want to change the default settings you can just hit enter when it asks if you want to use the default options. You will be given a series of prompts where you can enter the neccessary information.
+    To delete all the resources run the script again and choose delete.
 
-    When you are done testing run the script again and enter 2 to delete all the resources that were created.
-
-    Check the console to make sure they were successfully deleted.
+    Check the console to see everything was deleted.
     
     ----
 
