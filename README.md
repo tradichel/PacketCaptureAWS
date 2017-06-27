@@ -35,6 +35,7 @@ Before You Run This Script:
 
     Clone (download) this repo with this command: 
     git clone https://github.com/tradichel/PacketCaptureAWS.git
+    More info: https://git-scm.com/docs/git-clone
 
     If you are using Windows install a bash shell:
     https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/
@@ -45,20 +46,8 @@ Before You Run This Script:
     Activate The Firebox AMI In Your Account:
     http://websitenotebook.blogspot.com/2017/05/manually-activating-watchguard-firebox.html
     
-    ----
-
-    Additional Info
-
-    AWS:
-    https://aws.amazon.com/getting-started/
-
-    AWS IAM Best Practices (like MFA)
+    Follow AWS IAM Best Practices (like MFA)
     http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
-
-    Cloning repos:
-    https://git-scm.com/docs/git-clone
-
-    ---
 
 Run the code:
 
@@ -93,7 +82,7 @@ Run the code:
     If you want to change defaults, hit enter above. Read prompts.
 
     To delete all the resources run the script again and choose delete.
-    
+
 
 View The Results:
 
