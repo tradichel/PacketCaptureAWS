@@ -253,11 +253,10 @@ Resources:
       RuleAction : "Allow" 
       RuleNumber : "1011" 
 
-#SSH for admin
-  NaclSSHIngress:
+  NaclNTPEgressPublic:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties: 
-      CidrBlock: !Ref ParamAdminCidr
+      CidrBlock: "0.0.0.0/0"
       Egress: false 
       NetworkAclId: !Ref ManagementSubnetNacl
       Protocol: 6
@@ -267,7 +266,7 @@ Resources:
       RuleAction : "Allow" 
       RuleNumber : "2000" 
       
-  FireboxIntressEphemeral:
+  FireboxIngressEphemeral:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties: 
       CidrBlock: 0.0.0.0/0 
@@ -334,6 +333,20 @@ Resources:
          To: 65535
       RuleAction : "Allow" 
       RuleNumber : "2005" 
+
+  #SSH for admin
+  NaclSSHIngress:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref ParamAdminCidr
+      Egress: false 
+      NetworkAclId: !Ref ManagementSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 22
+         To: 22
+      RuleAction : "Allow" 
+      RuleNumber : "2006" 
 
   NaclS3Ingress4:
     Type: "AWS::EC2::NetworkAclEntry"
@@ -405,20 +418,6 @@ Resources:
          To: 65535
       RuleAction : "Allow" 
       RuleNumber : "2010" 
-
-  NaclS3Ingresseast3:
-    Type: "AWS::EC2::NetworkAclEntry"
-    Condition: conds3eastcidr3
-    Properties: 
-      CidrBlock: !Ref params3eastcidr3
-      Egress: false 
-      NetworkAclId: !Ref ManagementSubnetNacl
-      Protocol: 6
-      PortRange: 
-         From: 1024
-         To: 65535
-      RuleAction : "Allow" 
-      RuleNumber : "2011" 
 
 Outputs:
   FireboxManagementSubnet:

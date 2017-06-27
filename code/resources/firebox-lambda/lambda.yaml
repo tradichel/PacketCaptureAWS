@@ -4,6 +4,13 @@ Parameters:
   ParamStackName: 
     Type: String
     Description: "Name used in resource tags and names"
+  ParamWebServerCidr: 
+    Type: String
+    Description: "Cidr Block for Web Servers"
+    Default: "10.0.2.0/24"
+  ParamAdminCidr: 
+    Type: String
+    Description: "Cidr Block for Admin Users"
 Resources:
   FireboxConfigurationLambda:
     Type: "AWS::Lambda::Function"
@@ -16,7 +23,8 @@ Resources:
         Variables:
           Bucket: !ImportValue FireboxPrivateBucket
           FireboxIp: !ImportValue FireboxPrimaryManagementIpAddress
-          WebServerIp: !ImportValue WebServerIPAddress
+          WebServerCidr: !Ref ParamWebServerCidr
+          AdminCidr: !Ref ParamAdminCidr
       FunctionName: ConfigureFirebox
       Handler: fireboxconfig.configure_firebox
       KmsKeyArn: !ImportValue FireboxKmsKeyArn
@@ -29,3 +37,8 @@ Resources:
           - !ImportValue FireboxManagementSecurityGroup
         SubnetIds:
           - !ImportValue FireboxManagementSubnet
+      Tags:
+        - Key: Name
+          Value: FireboxLambda
+        - Key: Stack
+          Value: !Ref ParamStackName

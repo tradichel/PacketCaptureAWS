@@ -17,18 +17,25 @@ def configure_firebox(event, context):
     
     bucket=os.environ['Bucket']
     fireboxip=os.environ['FireboxIp']
-    webserverip=os.environ['WebServerIp']
+    webservercidr=os.environ['WebServerCidr']
+    admincidr=os.environ['AdminCidr']
     key="firebox-cli-ec2-key.pem"
     localkeyfile="/tmp/fb.pem"
     s3=boto3.client('s3')
     
-
     #####
     #save key to lambda to use for CLI connection
     #####
     print ('Get SSH key from S3 bucket')
-    s3.download_file(bucket, key, localkeyfile)
 
+    #aws s3 cp resources/firebox-lambda/fireboxconfig.zip s3://$bucket/fireboxconfig.zip --sse AES256 > upload.txt  2>&1  
+    #s3.download_file(bucket, key, localkeyfile, {'SSECustomerAlgorithm': 'AES256'})
+    s3.download_file(bucket, key, localkeyfile)
+    
+    f = open(localkeyfile, 'r')
+    print (f.read())
+    f.close()
+    
     #####
     # Connect to Firebox via CLI
     ###
@@ -45,39 +52,74 @@ def configure_firebox(event, context):
         c.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = localkeyfile)
         print("connected to " + fireboxip)
 
-        channel = c.invoke_shell()
-        command="configure\n"
-        channel.send(command)
-        time.sleep(3)
-        
-        #send feedback to WatchGUard for Security Report
-        #https://www.watchguard.com/wgrd-resource-center/security-report
-        command="global-setting report-data enable\n"
-        channel.send(command)
-        time.sleep(3)
-        
-        #make Firebox an NTP server
-        #http://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/basicadmin/NTP_server_enable_add_c.html
-        command="ntp enable\n"
-        channel.send(command)
-        time.sleep(3)
+        try:
+            
+            channel = c.invoke_shell()
+            command="configure\n"
+            channel.send(command)
+            time.sleep(3)
+            
+            #send feedback to WatchGUard for Security Report
+            #https://www.watchguard.com/wgrd-resource-center/security-report
+            command="global-setting report-data enable\n"
+            channel.send(command)
+            time.sleep(3)
+            
+            #make Firebox an NTP server
+            #http://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/basicadmin/NTP_server_enable_add_c.html
+            command="ntp enable\n"
+            channel.send(command)
+            time.sleep(3)
 
-        command="ntp device-as-server enable\n"
-        channel.send(command)
-        time.sleep(3)
-  
-        #create https policy that allows traffic
-        #in to our web servers on the optional interface
-        # on port 80
-        #TODO
-        
-        output=channel.recv(2024)
-        print(output)
+            command="ntp device-as-server enable\n"
+            channel.send(command)
+            time.sleep(3)
+      
+            #switch to policy mode
+            command="policy\n"
+            channel.send(command)
+            time.sleep(3)
 
+            #create a policy to allow
+            #the admin user SSH to packet capture server
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            #ephemeral ports out from packet capture server to admin
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            #create a policy to allow
+            #the admin user SSH to web server
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            #ephemeral ports out from web server to all
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            #allow traffic on port 80 to the web server
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            #remove any other ports
+            #command="policy\n"
+            #channel.send(command)
+            #time.sleep(3)
+
+            output=channel.recv(2024)
+            print(output)
+
+        finally:
+            if channel:
+                channel.close()
+                print ("channel closed")
     finally:
-        if channel:
-            channel.close()
-            print ("channel closed")
         if c:
             c.close()
             print ("connection closed")

@@ -13,6 +13,7 @@ Parameters:
     Type: String
     Description: "EC2 Key Pair name for CLI Commands over SSH"
 Resources:
+  
   FireboxPublicNetworkInterface:
     Type: "AWS::EC2::NetworkInterface"
     Properties: 
@@ -27,6 +28,7 @@ Resources:
           Value: FireboxPublicEni
         - Key: Stack
           Value: !Ref ParamStackName
+
   FireboxManagementNetworkInterface:
     Type: "AWS::EC2::NetworkInterface"
     Properties: 
@@ -41,6 +43,7 @@ Resources:
           Value: FireboxManagementEni
         - Key: Stack
           Value: !Ref ParamStackName
+
   FireboxWebServerNetworkInterface:
     Type: "AWS::EC2::NetworkInterface"
     Properties: 
@@ -78,6 +81,31 @@ Resources:
           Value: FireboxCloud
         - Key: Stack
           Value: !Ref ParamStackName
+
+  #Route all traffic to the firebox
+  #that is destined for teh Interent
+  #from the web server subnet
+  FireboxNATRouteWeb:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      NetworkInterfaceId: 
+        !Ref FireboxWebServerNetworkInterface
+      RouteTableId: 
+        !ImportValue WebServerRouteTable
+ 
+  #Do not want to open to Interent but
+  #if turning on SSH for testing
+  #access to packet capture host will need this
+  FireboxNATRouteMgmt:
+    Type: "AWS::EC2::Route"
+    Properties: 
+      DestinationCidrBlock: "0.0.0.0/0"
+      NetworkInterfaceId: 
+        !Ref FireboxManagementNetworkInterface
+      RouteTableId: 
+        !ImportValue FireboxManagementRouteTable
+
 Outputs:
   FireboxManagementNetworkInterface:
     Value: !Ref FireboxManagementNetworkInterface

@@ -56,10 +56,10 @@ Resources:
             exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
             yum update -y
             ntpsrv="amazon.pool.ntp.org" 
-            sed -i "s/0.$ntpserv/${fireboxmanagementip}/g" /etc/ntp.conf
-            sed -i "s/1.$ntpserv//g" /etc/ntp.conf
-            sed -i "s/2.$ntpserv//g" /etc/ntp.conf
-            sed -i "s/3.$ntpserv//g" /etc/ntp.conf
+            sed -i "s/0.$ntpsrv/${fireboxmanagementip}/g" /etc/ntp.conf
+            sed -i "s/1.$ntpsrv//g" /etc/ntp.conf
+            sed -i "s/2.$ntpsrv//g" /etc/ntp.conf
+            sed -i "s/3.$ntpsrv//g" /etc/ntp.conf
             cat /etc/ntp.conf
             service ntpd start
             ntpstat
@@ -68,6 +68,7 @@ Resources:
             chmod 700 /tmp/${fireboxkey}
             echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
             aws s3 cp (tcpdump -x)>s3://${logbucket}/tcpdump.txt
+            
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'

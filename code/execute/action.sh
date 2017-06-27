@@ -2,6 +2,7 @@
 action=$1; adminuser=$2; admincidr=$3; adminuserarn=$4; ami=$5; instancetype=$6; linuxami=$7
 
 keyname="firebox-cli-ec2-key"
+lambdafunction="ConfigureFirebox"
 
 #gettig the S3 cidrs is a bit messy so separating this out and doing it 
 #one time for all places it is required
@@ -146,6 +147,10 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
+    if [ "$stack" == "lambda" ]; then
+        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
+    fi
+
     echo "$stackparameter"
 }
 
@@ -256,7 +261,6 @@ if [ "$action" == "delete" ]; then
     stack=(
         "flowlogs"
         "flowlogsrole"
-        "natroute" 
         "elasticip"
         "firebox"
         "sgs3cidrs"
@@ -299,7 +303,6 @@ else #create/update
         "flowlogs"
         "firebox"
         "elasticip"
-        "natroute"
     )
     modify_stack $action "network" stack[@] 
 
@@ -314,17 +317,29 @@ else #create/update
     
     ./execute/upload_files.sh $keyname
 
+    #first we need to delete the existing lambda to pick up updates
+    action="delete"
     stack=(
-        "packetcaptureserver"
-        "webserver"
+        "lambda"
     )
-    modify_stack $action "instances" stack[@] 
+    modify_stack $action "lambda" stack[@] 
 
+    #then we can create or update the lambda
+    action="create"
     stack=(
         "kmskey"
         "lambda"
     )
     modify_stack $action "lambda" stack[@] 
+
+    ./execute/exec_lambda.sh
+    
+    stack=(
+        "packetcaptureserver"
+        "webserver"
+    )
+
+    modify_stack $action "instances" stack[@] 
     
 fi
 
