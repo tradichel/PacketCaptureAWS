@@ -92,13 +92,17 @@ Run the code:
     
     If you want to change defaults, hit enter above. Read prompts.
 
+    To delete all the resources run the script again and choose delete.
+    
+
+View The Results:
+
     Watch the screen for updates.
 
     Log into the console to see what was created.
 
-    To delete all the resources run the script again and choose delete.
-
     Check the console to see everything was deleted.
+
     
 To read articles and papers related to this code:
 
