@@ -44,7 +44,21 @@ Before You Run This Script:
 
     Activate The Firebox AMI In Your Account:
     http://websitenotebook.blogspot.com/2017/05/manually-activating-watchguard-firebox.html
+    
+    ----
 
+    Additional Info
+
+    AWS:
+    https://aws.amazon.com/getting-started/
+
+    AWS IAM Best Practices (like MFA)
+    http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+
+    Cloning repos:
+    https://git-scm.com/docs/git-clone
+
+    ---
 
 Run the code:
 
@@ -86,67 +100,15 @@ Run the code:
 
     Check the console to see everything was deleted.
     
-    ----
+To read articles and papers related to this code:
 
-    Additional Info
+    - Follow me on Twitter:
 
-    AWS:
-    https://aws.amazon.com/getting-started/
+        @teriradichel
 
-    AWS IAM Best Practices (like MFA)
-    http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+    - Follow me on Secplicity
 
-    Cloning repos:
-    https://git-scm.com/docs/git-clone
-
-    ---
-
-Now Run The Code (in the code directory):
-
-    ./run.sh 
-
-Follow the prompts.
-
-> Select which action you want to take - create, update or delete resources. 
-
-    Please select:
-    1) Create
-    2) Update
-    3) Delete
-    4) Cancel
-    #? 
-
-> Enter the CIDR that is allowed to upload files to your private S3 bucket or hit enter. 
-
-    Enter the IP range allowed to access Firebox S3 bucket (default is 0.0.0.0/0)
-
-> Select an AMI. The script will execute a command to produce a list of available AMIs. For example, if I want the Firebox Pay-As-You-Go version 11.12.2 I would enter ami-a844d4c8 at the prompt and hit enter. (If you don't see any then you need to follow the steps above to activate the AMI from the marketplace.)
-
-    Available AMIs:
-    ami-3b4ddd5b 
-    firebox-cloud-11_12_2-526900-byol
-    ami-a844d4c8 
-    firebox-cloud-11_12_2-526900-payasyougo
-    WatchGuard Marketplace AMI from list above:
-
-> Enter an MFA token. Your session lasts 12 hours once created.
-
-    MFA token (return to use active session):
-    
-Watch as your resources get created...
-
-[When script is complete: browse to web server and view pcap files in S3 bucket]
-
-TODO:
-
-    - eth2 + networking for web servers
-    - set up web server + routes to access from Interent
-    - set up EC2 instance for packet capture
-    - create pcap files in an S3 bucket
-
-Questions?
-
-    @teriradichel
+        https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
 
 More about Firebox Cloud:
 
@@ -162,10 +124,6 @@ More about Firebox Cloud:
     Some resellers sell on Amazon:
     https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
 
-Other Cloud Resources:
 
-    Cloud Security:
-    https://www.secplicity.org/2017/04/08/cloud-security/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
 
-    How Can Automation Improve Security?
-    https://www.secplicity.org/2017/04/21/how-can-automation-improve-security/?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
+
