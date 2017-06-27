@@ -108,6 +108,7 @@ then
         echo "Instance Type (default: c4.large - See README.md for requirements):"
         read instancetype
     fi
+
     if [ "$instancetype" = "" ]; then instancetype="c4.large"; fi
 
 fi
@@ -124,8 +125,9 @@ if [ "$usedefault" != "Y" ]; then
     read mfatoken
 fi
 
-if [ "$mfatoken" != "" ]
+if [ "$mfatoken" == "" ]
 then
+
     mfaarn="arn:aws:iam::$account:mfa/$user"
     error=$(./execute/get_credentials.sh $mfaarn $mfatoken | grep "error\|Invalid") 
     if [ "$error" != "" ]; then 

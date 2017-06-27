@@ -86,10 +86,7 @@ View The Results:
 
     Watch the screen for updates.
 
-    Log into the console to see what was created.
-
-    Check the console to see everything was deleted.
-
+    Log into the console to see that actions were successful
     
 To read articles and papers related to this code:
 
@@ -100,10 +97,18 @@ To read articles and papers related to this code:
     - Follow me on Secplicity
 
         https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
+    
+    - Presentations
+
+        https://www.slideshare.net/TeriRadichel
+
+    - AWS Network Security Video:
+    
+        https://youtu.be/DSptV0km1aY
 
 More about Firebox Cloud:
 
-    Set Up Firebox Cloud:
+    Set Up firebox_cloud Cloud:
     https://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/firebox_cloud/fb_cloud_help_intro.html
 
     Latest Firebox Documentation:

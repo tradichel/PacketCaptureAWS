@@ -63,12 +63,12 @@ Resources:
             cat /etc/ntp.conf
             service ntpd start
             yum update -y
-            echo 'aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}'            
             aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
             chmod 700 /tmp/${fireboxkey}
-            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
-            aws s3 cp (tcpdump -x)>s3://${logbucket}/tcpdump.txt
             ntpstat
+            echo "management ip {fireboxmanagementip}"
+            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip} -p 4118
+            tcpdump -x
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
