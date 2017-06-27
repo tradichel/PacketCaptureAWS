@@ -67,8 +67,6 @@ Run the code:
 
     The code will tell you the region your CLI is configured to use:
 
-        ***
-        * Begin: Mon Jun 26 21:20:00 HST 2017
         * ---- NOTE --------------------------------------------
         * Your CLI is configured for region:  us-west-2
         * Resources will be created in this region.
