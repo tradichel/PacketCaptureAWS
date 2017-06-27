@@ -45,21 +45,23 @@ Resources:
           !Sub 
           - | 
             #!/bin/bash -xe
+            service ntpd stop
             exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            ntpsrv="amazon.pool.ntp.org" 
+            sed -i "s/0.$ntpsrv/${fireboxmanagementip}/g" /etc/ntp.conf
+            sed -i "s/server 1.$ntpsrv iburst//g" /etc/ntp.conf
+            sed -i "s/server 2.$ntpsrv iburst//g" /etc/ntp.conf
+            sed -i "s/server 3.$ntpsrv iburst//g" /etc/ntp.conf
+            cat /etc/ntp.conf
+            service ntpd start
             yum update
             yum -y install httpd
             service httpd start
-            ntpsrv="amazon.pool.ntp.org" 
-            sed -i "s/0.$ntpserv/${fireboxmanagementip}/g" /etc/ntp.conf
-            sed -i "s/1.$ntpserv//g" /etc/ntp.conf
-            sed -i "s/2.$ntpserv//g" /etc/ntp.conf
-            sed -i "s/3.$ntpserv//g" /etc/ntp.conf
-            cat /etc/ntp.conf
-            service ntpd start
             ntpstat
+            
           -
             fireboxmanagementip: 
-              'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
+              'Fn::ImportValue': 'FireboxPrimaryWebServerIpAddress'
           
       Tags:
         - Key: Name

@@ -22,7 +22,7 @@ def configure_firebox(event, context):
     key="firebox-cli-ec2-key.pem"
     localkeyfile="/tmp/fb.pem"
     s3=boto3.client('s3')
-    
+ 
     #####
     #save key to lambda to use for CLI connection
     #####
@@ -79,6 +79,23 @@ def configure_firebox(event, context):
       
             #switch to policy mode
             command="policy\n"
+            channel.send(command)
+            time.sleep(3)
+
+            #outbound for S3
+            #for x in range(0, 6):
+            #    varname='s3cidr'+x
+            #    print(varname)
+            #    envar = s.environ[varname]
+            #    if envar != "":
+            #        print(envar)
+                    #open traffic outbound on port 80 and 443
+                    #to the IP in the environment variable
+                    #command="policy\n"
+                    #channel.send(command)
+                    #time.sleep(3)
+            
+            command="help https-proxy\n"
             channel.send(command)
             time.sleep(3)
 

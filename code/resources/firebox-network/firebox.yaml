@@ -127,3 +127,7 @@ Outputs:
     Value: !GetAtt FireboxManagementNetworkInterface.PrimaryPrivateIpAddress
     Export:
       Name: "FireboxPrimaryManagementIpAddress"
+  FireboxWebPrivateIpAddress:
+    Value: !GetAtt FireboxWebServerNetworkInterface.PrimaryPrivateIpAddress
+    Export:
+      Name: "FireboxPrimaryWebServerIpAddress"

@@ -54,7 +54,7 @@ Resources:
           - | 
             #!/bin/bash -xe
             exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-            yum update -y
+            service ntpd stop
             ntpsrv="amazon.pool.ntp.org" 
             sed -i "s/0.$ntpsrv/${fireboxmanagementip}/g" /etc/ntp.conf
             sed -i "s/server 1.$ntpsrv iburst//g" /etc/ntp.conf
@@ -62,13 +62,13 @@ Resources:
             sed -i "s/server 3.$ntpsrv iburst//g" /etc/ntp.conf
             cat /etc/ntp.conf
             service ntpd start
-            ntpstat
-            
+            yum update -y
+            echo 'aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}'            
             aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
             chmod 700 /tmp/${fireboxkey}
             echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip}" > /tmp/fb.sh
             aws s3 cp (tcpdump -x)>s3://${logbucket}/tcpdump.txt
-            
+            ntpstat
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
@@ -78,7 +78,7 @@ Resources:
               'Fn::ImportValue': 'FireboxPrivateBucket'
             logbucket:
               'Fn::ImportValue': 'FireboxLogBucket'
-              
+
       Tags:
         - Key: Name
           Value: PacketCaptureServer

@@ -47,6 +47,10 @@ Resources:
           FromPort: 80
           ToPort: 80
           IpProtocol: "tcp"
+        - SourceSecurityGroupId: !Ref FireboxManagementSecurityGroup
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: "tcp"
       SecurityGroupEgress:
         - DestinationSecurityGroupId: !Ref FireboxManagementSecurityGroup
           FromPort: 22
@@ -78,6 +82,36 @@ Resources:
       IpProtocol: "udp"
       FromPort: 123
       ToPort: 123
+
+  ManagementSecurityGroupEgress80:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref FireboxManagementSecurityGroup
+      DestinationSecurityGroupId:
+        !Ref FireboxManagementEniSecurityGroup
+      IpProtocol: "udp"
+      FromPort: 80
+      ToPort: 80
+
+  ManagementSecurityGroupEgress443:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref FireboxManagementSecurityGroup
+      DestinationSecurityGroupId:
+        !Ref FireboxManagementEniSecurityGroup
+      IpProtocol: "udp"
+      FromPort: 443
+      ToPort: 443
+
+  ManagementSecurityGroupIngress22:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref FireboxManagementSecurityGroup
+      SourceSecurityGroupId:
+        !Ref FireboxManagementEniSecurityGroup
+      IpProtocol: "udp"
+      FromPort: 22
+      ToPort: 22
 
 Outputs:
   FireboxManagementEniSecurityGroup:
