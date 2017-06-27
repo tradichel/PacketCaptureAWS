@@ -419,18 +419,18 @@ Resources:
       RuleAction : "Allow" 
       RuleNumber : "2011" 
 
-  NaclS3EgressEast3:
+  NaclAWSDNS:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties: 
       CidrBlock: !Ref paramsAWSGlobalDNS
       Egress: true 
       NetworkAclId: !Ref FireboxPublicSubnetNacl
-      Protocol: 6
+      Protocol: 17
       PortRange: 
-         From: 80
-         To: 443
+         From: 53
+         To: 53
       RuleAction : "Allow" 
-      RuleNumber : "2012" 
+      RuleNumber : "2013" 
 
 Outputs:
   FireboxPublicSubnet:

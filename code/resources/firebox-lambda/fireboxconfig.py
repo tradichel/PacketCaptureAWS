@@ -32,9 +32,11 @@ def configure_firebox(event, context):
     #s3.download_file(bucket, key, localkeyfile, {'SSECustomerAlgorithm': 'AES256'})
     s3.download_file(bucket, key, localkeyfile)
     
-    f = open(localkeyfile, 'r')
-    print (f.read())
-    f.close()
+    #if need to view key - note this displays key
+    #in cloudwatch logs
+    #f = open(localkeyfile, 'r')
+    #print (f.read())
+    #f.close()
     
     #####
     # Connect to Firebox via CLI

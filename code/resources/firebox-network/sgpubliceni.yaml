@@ -51,6 +51,10 @@ Parameters:
     Type: String
     Default: "8080"
     Description: "Open port for CLI access to Firebox on port 8080"
+  paramsAWSGlobalDNS:
+    Type: String
+    Default: "205.251.192.0/19"
+
 Conditions:
   #make sure all the IPs exist before we attempt to create
   #rules for them. This handles some, but not all, DNS changes
@@ -197,6 +201,15 @@ Resources:
     Properties:
       GroupId: !Ref FireboxPublicSecurityGroup
       CidrIp: !Ref paramwebrepauth5
+      FromPort: 53
+      ToPort: 53
+      IpProtocol: udp
+
+  FireboxAwsDns:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref FireboxPublicSecurityGroup
+      CidrIp: !Ref paramsAWSGlobalDNS
       FromPort: 53
       ToPort: 53
       IpProtocol: udp

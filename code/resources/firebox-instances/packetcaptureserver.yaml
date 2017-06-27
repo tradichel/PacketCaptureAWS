@@ -57,9 +57,9 @@ Resources:
             yum update -y
             ntpsrv="amazon.pool.ntp.org" 
             sed -i "s/0.$ntpsrv/${fireboxmanagementip}/g" /etc/ntp.conf
-            sed -i "s/1.$ntpsrv//g" /etc/ntp.conf
-            sed -i "s/2.$ntpsrv//g" /etc/ntp.conf
-            sed -i "s/3.$ntpsrv//g" /etc/ntp.conf
+            sed -i "s/server 1.$ntpsrv iburst//g" /etc/ntp.conf
+            sed -i "s/server 2.$ntpsrv iburst//g" /etc/ntp.conf
+            sed -i "s/server 3.$ntpsrv iburst//g" /etc/ntp.conf
             cat /etc/ntp.conf
             service ntpd start
             ntpstat
@@ -78,6 +78,7 @@ Resources:
               'Fn::ImportValue': 'FireboxPrivateBucket'
             logbucket:
               'Fn::ImportValue': 'FireboxLogBucket'
+              
       Tags:
         - Key: Name
           Value: PacketCaptureServer
