@@ -8,6 +8,10 @@ Parameters:
     Type: String
     Description: "Cidr Block for Web Servers"
     Default: "10.0.2.0/24"
+    ParamManagementCidr: 
+    Type: String
+    Description: "Cidr Block for Management"
+    Default: "10.0.2.0/24"
   ParamAdminCidr: 
     Type: String
     Description: "Cidr Block for Admin Users"
@@ -25,6 +29,7 @@ Resources:
           Bucket: !ImportValue FireboxPrivateBucket
           FireboxIp: !ImportValue FireboxPrimaryManagementIpAddress
           WebServerCidr: !Ref ParamWebServerCidr
+          ManagementCidr: !Ref ParamManagementCidr
           AdminCidr: !Ref ParamAdminCidr
       
       FunctionName: ConfigureFirebox
@@ -33,7 +38,7 @@ Resources:
       MemorySize: 128
       Role: !ImportValue FireboxLambdaCLIRoleArn
       Runtime: python2.7
-      Timeout: 60
+      Timeout: 180
       VpcConfig:
         SecurityGroupIds:
           - !ImportValue FireboxManagementSecurityGroup

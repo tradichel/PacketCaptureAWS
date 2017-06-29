@@ -1,5 +1,7 @@
 #!/bin/sh
-action=$1; adminuser=$2; admincidr=$3; adminuserarn=$4; ami=$5; instancetype=$6; linuxami=$7
+action=$1; adminuser=$2; admincidr=$3; adminuserarn=$4; 
+ami=$5; instancetype=$6; linuxami=$7
+publiccidr=$8; managementcidr=$9; webservercidr=$10
 
 keyname="firebox-cli-ec2-key"
 lambdafunction="ConfigureFirebox"
@@ -143,8 +145,12 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
-    if [ "$stack" == "sbmanagement" ] || [ "$stack" == "sbwebserver" ]; then
-        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
+    if [ "$stack" == "sbmanagement" ]; then
+        echo "$stackparameter ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
+    fi
+
+    if [ "$stack" == "sbwebserver" ]; then
+        echo "$stackparameter ParameterKey=ParamWebServerSubnetCidr,ParameterValue=$webservercidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
     if [ "$stack" == "lambda" ]; then

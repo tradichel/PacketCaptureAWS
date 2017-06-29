@@ -7,7 +7,6 @@ Parameters:
     Description: "Name used in resource tags and names"
   ParamWebServerSubnetCidr: 
     Type: String
-    Default: "10.0.2.0/24"
     Description: "CIDR block for Web Server subnet"
   ParamWebServerPort: 
     Type: String

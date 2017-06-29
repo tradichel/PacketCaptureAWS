@@ -17,6 +17,8 @@ def configure_firebox(event, context):
     
     bucket=os.environ['Bucket']
     fireboxip=os.environ['FireboxIp']
+    managementsubnetcidr=os.environ['ManagmenetCidr']
+    webserversubnetcidr=os.environ['WebServerCidr']
     key="firebox-cli-ec2-key.pem"
     localkeyfile="/tmp/fb.pem"
     s3=boto3.client('s3')
@@ -32,7 +34,8 @@ def configure_firebox(event, context):
     ###
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
     c = paramiko.SSHClient()
-    
+
+    managementsubnetcidr=""
 
     try:
 
@@ -45,6 +48,7 @@ def configure_firebox(event, context):
         print("connected to " + fireboxip)
 
         channel = c.invoke_shell()
+
         command="configure\n"
         channel.send(command)
         time.sleep(3)
@@ -75,7 +79,13 @@ def configure_firebox(event, context):
         output=channel.recv(2024)
         print(output)
 
-        #switch to policy mode
+        #need to figure out how to create a new policy-type
+        #command="policy-type http protocol tcp 80\n"
+        #channel.send(command)
+        #time.sleep(3)
+        #output=channel.recv(2024)
+        #print(output)
+        
         command="policy\n"
         channel.send(command)
         time.sleep(3)
@@ -83,28 +93,30 @@ def configure_firebox(event, context):
         output=channel.recv(2024)
         print(output)
 
-        command="policy-type httpout protocol tcp 80\n"
+        command="rule http out\n"
         channel.send(command)
         time.sleep(3)
 
         output=channel.recv(2024)
         print(output)
 
-        command="rule 80 egress\n"
+        #allow all since AWS public NACL rules only allow out to S3 cidrs
+        command="policy-type HTTP-proxy from alias Any-Trusted to alias Any-External\n"
+        channel.sendall(command)
+        time.sleep(3)
+
+        output=channel.recv(2024)
+        print(output)
+
+        command="rule 443-S3-out\n"
         channel.send(command)
         time.sleep(3)
 
         output=channel.recv(2024)
         print(output)
 
-        command="policy-type httpout from 0.0.0.0/0 to 0.0.0.0/0\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="exit\n"
+        #allow all since AWS public NACL rules only allow out to S3 cidrs
+        command="policy-type HTTPS-proxy from alias Any-Trusted to alias Any-External\n"
         channel.send(command)
         time.sleep(3)
 
@@ -117,6 +129,13 @@ def configure_firebox(event, context):
 
         output=channel.recv(2024)
         print(output)
+    
+        #command="exit\n"
+        #channel.send(command)
+        #time.sleep(3)
+
+        #output=channel.recv(2024)
+        #print(output)
 
     finally:
         if channel:
@@ -127,3 +146,22 @@ def configure_firebox(event, context):
             print ("connection closed")
 
     return 'success'
+
+#if content returned is too long can use this    
+def _wait_for_data(self, options, verbose=False):
+    chan = self.chan
+    data = ""
+    while True:
+        x = chan.recv(1024)
+        if len(x) == 0:
+            self.log("*** Connection terminated\r")
+            sys.exit(3)
+        data += x
+        if verbose:
+            sys.stdout.write(x)
+            sys.stdout.flush()
+        for i in range(len(options)):
+            if re.search(options[i], data):
+                return i
+    return -1
+    

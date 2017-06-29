@@ -1,5 +1,6 @@
 #!/bin/sh
 mfa=$1;tokencode=$2
+
 #get an STS session using MFA for bucket policy that requires MFA to upload files
 aws sts get-session-token --serial-number $mfa --token-code $tokencode > "session.txt" 2>&1 
 error=$(cat session.txt | grep "error\|Invalid")
