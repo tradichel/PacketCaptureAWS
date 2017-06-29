@@ -1,7 +1,14 @@
 #!/bin/sh
-action=$1; adminuser=$2; admincidr=$3; adminuserarn=$4; 
-ami=$5; instancetype=$6; linuxami=$7
-publiccidr=$8; managementcidr=$9; webservercidr=$10
+action=$1
+adminuser=$2
+admincidr=$3
+adminuserarn=$4
+ami=$5
+instancetype=$6
+linuxami=$7
+publiccidr=$8
+managementcidr=$9 
+webservercidr="${10}"
 
 keyname="firebox-cli-ec2-key"
 lambdafunction="ConfigureFirebox"

@@ -59,7 +59,7 @@ done
 if [ "$action" != "delete" ]; then
 
     defaultinstancetype="c4.large"
-    defaultpublicidr="10.0.0.0/24"
+    defaultpubliccidr="10.0.0.0/24"
     defaultmanagementcidr="10.0.1.0/24"
     defaultwebcidr="10.0.2.0/24"
     defaultadmincidr=$(get_default_admin_cidr)
@@ -130,7 +130,7 @@ fi
 if [ "$ami" = "" ]; then ami="$fireboxami"; fi
 if [ "$linuxami" = "" ]; then linuxami="$lami"; fi
 if [ "$instancetype" = "" ]; then instancetype="$defaultinstancetype"; fi
-if [ "$publiccidr" = "" ]; then publiccidr="$defaultpublicidr"; fi
+if [ "$publiccidr" = "" ]; then publiccidr="$defaultpubliccidr"; fi
 if [ "$webservercidr" = "" ]; then webservercidr="$defaultwebcidr"; fi
 if [ "$managementcidr" = "" ]; then managementcidr="$defaultmanagementcidr"; fi
 if [ "$adminips" = "" ]; then adminips="$defaultadmincidr"; fi
