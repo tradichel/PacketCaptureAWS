@@ -149,11 +149,11 @@ function get_parameters(){
     fi
 
     if [ "$stack" == "sbpublic" ]; then
-        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
+        echo "$stackparameter ParameterKey=ParamPublicSubnetCidr,ParameterValue=$publiccidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
     if [ "$stack" == "sbmanagement" ]; then
-        echo "$stackparameter ParameterKey=ParamPublicSubnetCidr,ParameterValue=$publiccidr ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
+        echo "$stackparameter ParameterKey=ParamManagementCidr,ParameterValue=$managementcidr ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
     if [ "$stack" == "sbwebserver" ]; then
