@@ -153,7 +153,7 @@ function get_parameters(){
     fi
 
     if [ "$stack" == "sbmanagement" ]; then
-        echo "$stackparameter ParameterKey=ParamManagementCidr,ParameterValue=$managementcidr ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
+        echo "$stackparameter ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamManagementSubnetCidr,ParameterValue=$managementcidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
     if [ "$stack" == "sbwebserver" ]; then
@@ -161,7 +161,7 @@ function get_parameters(){
     fi
 
     if [ "$stack" == "lambda" ]; then
-        echo "$stackparameter ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
+        echo "$stackparameter ParameterKey=ParamManagementCidr,ParameterValue=$managementcidr ParameterKey=ParamWebServerCidr,ParameterValue=$webservercidr  ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
     fi
 
     echo "$stackparameter"

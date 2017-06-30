@@ -7,11 +7,9 @@ Parameters:
   ParamWebServerCidr: 
     Type: String
     Description: "Cidr Block for Web Servers"
-    Default: "10.0.2.0/24"
-    ParamManagementCidr: 
+  ParamManagementCidr: 
     Type: String
     Description: "Cidr Block for Management"
-    Default: "10.0.2.0/24"
   ParamAdminCidr: 
     Type: String
     Description: "Cidr Block for Admin Users"
