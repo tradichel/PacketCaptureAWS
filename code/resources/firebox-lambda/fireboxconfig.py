@@ -17,7 +17,7 @@ def configure_firebox(event, context):
     
     bucket=os.environ['Bucket']
     fireboxip=os.environ['FireboxIp']
-    managementsubnetcidr=os.environ['ManagmenetCidr']
+    managementsubnetcidr=os.environ['ManagementCidr']
     webserversubnetcidr=os.environ['WebServerCidr']
     key="firebox-cli-ec2-key.pem"
     localkeyfile="/tmp/fb.pem"
@@ -93,7 +93,7 @@ def configure_firebox(event, context):
         output=channel.recv(2024)
         print(output)
 
-        command="rule http out\n"
+        command="rule http-out\n"
         channel.send(command)
         time.sleep(3)
 
@@ -108,7 +108,14 @@ def configure_firebox(event, context):
         output=channel.recv(2024)
         print(output)
 
-        command="rule 443-S3-out\n"
+        command="apply\n"
+        channel.send(command)
+        time.sleep(3)
+
+        output=channel.recv(2024)
+        print(output)
+
+        command="rule 443-out\n"
         channel.send(command)
         time.sleep(3)
 
@@ -130,12 +137,12 @@ def configure_firebox(event, context):
         output=channel.recv(2024)
         print(output)
     
-        #command="exit\n"
-        #channel.send(command)
-        #time.sleep(3)
+        command="exit\n"
+        channel.send(command)
+        time.sleep(3)
 
-        #output=channel.recv(2024)
-        #print(output)
+        output=channel.recv(2024)
+        print(output)
 
     finally:
         if channel:
