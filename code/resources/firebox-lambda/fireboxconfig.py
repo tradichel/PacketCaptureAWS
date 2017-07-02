@@ -15,27 +15,34 @@ logging.getLogger("paramiko").setLevel(logging.DEBUG)
 
 def configure_firebox(event, context):
     
+    #get environment vars defined in lambda.yaml
     bucket=os.environ['Bucket']
     fireboxip=os.environ['FireboxIp']
     managementsubnetcidr=os.environ['ManagementCidr']
     webserversubnetcidr=os.environ['WebServerCidr']
-    key="firebox-cli-ec2-key.pem"
+    admincidr=os.environ['AdminCidr']
+    sshkey=os.environ['Key']
+
     localkeyfile="/tmp/fb.pem"
     s3=boto3.client('s3')
+    
+    ###
+    #turn on detailed request logging to troubleshoot
+    #S3 endpoint connection errors
+    ###
+    #boto3.set_stream_logger(name='botocore')
     
     #####
     #save key to lambda to use for CLI connection
     #####
-    print ('Get SSH key from S3 bucket')
-    s3.download_file(bucket, key, localkeyfile)
+    print ("Get SSH key from S3 bucket")
+    s3.download_file(bucket, sshkey, localkeyfile)
 
     #####
-    # Connect to Firebox via CLI
+    # Set up SSH client
     ###
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
     c = paramiko.SSHClient()
-
-    managementsubnetcidr=""
 
     try:
 
@@ -49,101 +56,17 @@ def configure_firebox(event, context):
 
         channel = c.invoke_shell()
 
-        command="configure\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="global-setting report-data enable\n"
-        channel.send(command)
-        time.sleep(3)
-        
-        output=channel.recv(2024)
-        print(output)
-
-        #make Firebox an NTP server
-        #http://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/basicadmin/NTP_server_enable_add_c.html
-        command="ntp enable\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="ntp device-as-server enable\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        #need to figure out how to create a new policy-type
-        #command="policy-type http protocol tcp 80\n"
-        #channel.send(command)
-        #time.sleep(3)
-        #output=channel.recv(2024)
-        #print(output)
-        
-        command="policy\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="rule http-out\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        #allow all since AWS public NACL rules only allow out to S3 cidrs
-        command="policy-type HTTP-proxy from alias Any-Trusted to alias Any-External\n"
-        channel.sendall(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="apply\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="rule 443-out\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        #allow all since AWS public NACL rules only allow out to S3 cidrs
-        command="policy-type HTTPS-proxy from alias Any-Trusted to alias Any-External\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
-        command="apply\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-    
-        command="exit\n"
-        channel.send(command)
-        time.sleep(3)
-
-        output=channel.recv(2024)
-        print(output)
-
+        run_command(channel, "configure")
+        run_command(channel, "global-setting report-data enable")
+        run_command(channel, "ntp enable")
+        run_command(channel, "ntp device-as-server enable")
+        run_command(channel, "policy")
+        add_cidr_rule(channel, "admin-ssh", admincidr, managementsubnetcidr, "tcp", "22")
+        add_cidr_rule(channel, "admin-ssh", admincidr, webserversubnetcidr, "tcp", "22")
+        add_alias_rule(channel, "HTTP-proxy", "Any-Trusted", "Any-External", "tcp", "80")
+        add_alias_rule(channel, "HTTPS-proxy", "Any-Trusted", "Any-External", "tcp", "443")
+    except ValueError as err:
+        print(err.args)  
     finally:
         if channel:
             channel.close()
@@ -154,9 +77,41 @@ def configure_firebox(event, context):
 
     return 'success'
 
+#good error handling info
+#https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
+def add_alias_rule(channel, aliasfrom, aliasto, policyname, protocol, port):
+    try:
+        run_command(channel, "rule https-out")
+        run_command(channel, "policy-type " + policyname + " from alias " + aliasfrom + " to " + aliasto + " Any-External")
+        run_command(channel, "apply")
+        run_command(channel, "exit")
+    except ValueError as err:
+        raise
+
+def add_cidr_rule(channel, cidrfrom, cidrto, policyname, protocol, port):
+    try:
+        run_command (channel, "policy-type " + policyname + " protocol " + protocol + " " + port)
+        run_command(channel, "policy-type " + policyname + " from network-ip " + cidrfrom + " to newtork-ip " + cidrto + " firebox allowed")
+        run_command(channel, "apply")
+        run_command(channel, "exit")
+    except ValueError as err:
+        raise
+
+def run_command(channel, command):
+    c=command + "\n"
+    channel.send(c)
+    time.sleep(3)
+    output=channel.recv(2024)
+    print(output)
+    #check for an error here and change the
+    #return value on error
+    if output.find('^')!=-1:
+        raise ValueError('Error executing firebox command', command)
+    
+
 #if content returned is too long can use this    
-def _wait_for_data(self, options, verbose=False):
-    chan = self.chan
+def _wait_for_data(channel, options, verbose=False):
+    chan = channel
     data = ""
     while True:
         x = chan.recv(1024)

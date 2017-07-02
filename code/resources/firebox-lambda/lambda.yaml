@@ -29,6 +29,7 @@ Resources:
           WebServerCidr: !Ref ParamWebServerCidr
           ManagementCidr: !Ref ParamManagementCidr
           AdminCidr: !Ref ParamAdminCidr
+          Key: "firebox-cli-ec2-key.pem"
       
       FunctionName: ConfigureFirebox
       Handler: fireboxconfig.configure_firebox

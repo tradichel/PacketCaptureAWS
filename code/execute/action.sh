@@ -9,6 +9,7 @@ linuxami=$7
 publiccidr=$8
 managementcidr=$9 
 webservercidr="${10}"
+deleteall="${11}"
 
 keyname="firebox-cli-ec2-key"
 lambdafunction="ConfigureFirebox"
@@ -220,19 +221,21 @@ function log_errors(){
         echo "$stack status: $status"
         case "$status" in 
             UPDATE_COMPLETE|CREATE_COMPLETE)   
-                return
+                if [ "$action" != "delete" ]; then
+                    return
+                fi
                 ;;
             *)
-                cat $stackname.txt
-                aws cloudformation describe-stack-events --stack-name $stackname | grep "ResourceStatusReason"
-                echo "* ---- What's the problem? ---"
-                echo "* Stack $action failed."
-                echo "* See the details above which can also be found in the CloudFormation console"
-                echo "* ----------------------------"
-                exit
-                ;;
-          *)
         esac
+
+        cat $stackname.txt
+        aws cloudformation describe-stack-events --stack-name $stackname | grep "ResourceStatusReason"
+        echo "* ---- What's the problem? ---"
+        echo "* Stack $action failed."
+        echo "* See the details above which can also be found in the CloudFormation console"
+        echo "* ----------------------------"
+        exit
+        
     fi
 }
 
@@ -261,34 +264,42 @@ if [ "$action" == "delete" ]; then
 
     modify_stack $action "instances" stack[@] 
 
-    stack=(
-        "s3endpointegress"
-        "s3endpoint"
-        "s3bucketpolicy"
-        "clirole"
-        "s3bucket"
-     )
+    if [ deleteall == "Y"]; then
 
-    modify_stack $action "cli" stack[@] 
+        stack=(
+            "s3endpointegress"
+            "s3endpoint"
+            "s3bucketpolicy"
+            "clirole"
+            "s3bucket"
+         )
 
-    stack=(
-        "flowlogs"
-        "flowlogsrole"
-        "elasticip"
-        "firebox"
-        "sgs3cidrs"
-        "sgssh"
-        "sgmanagementeni"
-        "sgpubliceni"
-        "sgwebservereni"
-        "sbwebserver"
-        "sgwebserver"
-        "sbpublic"
-        "sbmanagement"
-        "routetables"
-        "internetgateway"
-        "vpc"
-    )
+        modify_stack $action "cli" stack[@] 
+
+        stack=(
+            "flowlogs"
+            "flowlogsrole"
+            "elasticip"
+            "firebox"
+            "sgs3cidrs"
+            "sgssh"
+            "sgmanagementeni"
+            "sgpubliceni"
+            "sgwebservereni"
+            "sbwebserver"
+            "sgwebserver"
+            "sbpublic"
+            "sbmanagement"
+            "routetables"
+            "internetgateway"
+            "vpc"
+        )
+    else
+       stack=(
+            "elasticip"
+            "firebox"
+        )  
+    fi
 
     modify_stack $action "network" stack[@] 
 

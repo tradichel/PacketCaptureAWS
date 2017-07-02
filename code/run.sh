@@ -56,6 +56,12 @@ select cudl in "Create/Update" "Delete" "Cancel"; do
     esac
 done
 
+if [ "$action" == "delete" ]; then
+    echo "Delete Non-Billable Resources (Y)?"
+    read deleteall
+    if [ "$deleteall" == "y" ]; then deleteall="Y"; fi
+fi
+
 if [ "$action" != "delete" ]; then
 
     defaultinstancetype="c4.large"
@@ -120,20 +126,30 @@ if [ "$action" != "delete" ]; then
         read managementcidr
     
     fi
-fi
 
-if [ "$defaultadmincidr" = "" ]; then
-    echo "Enter the Admin IP range (default: $yourip/32)"
-    read adminips
-fi
+    if [ "$defaultadmincidr" = "" ]; then
+        echo "Enter the Admin IP range (default: $yourip/32)"
+        read adminips
+    fi
 
-if [ "$ami" = "" ]; then ami="$fireboxami"; fi
-if [ "$linuxami" = "" ]; then linuxami="$lami"; fi
-if [ "$instancetype" = "" ]; then instancetype="$defaultinstancetype"; fi
-if [ "$publiccidr" = "" ]; then publiccidr="$defaultpubliccidr"; fi
-if [ "$webservercidr" = "" ]; then webservercidr="$defaultwebcidr"; fi
-if [ "$managementcidr" = "" ]; then managementcidr="$defaultmanagementcidr"; fi
-if [ "$adminips" = "" ]; then adminips="$defaultadmincidr"; fi
+    if [ "$ami" = "" ]; then ami="$fireboxami"; fi
+    if [ "$linuxami" = "" ]; then linuxami="$lami"; fi
+    if [ "$instancetype" = "" ]; then instancetype="$defaultinstancetype"; fi
+    if [ "$publiccidr" = "" ]; then publiccidr="$defaultpubliccidr"; fi
+    if [ "$webservercidr" = "" ]; then webservercidr="$defaultwebcidr"; fi
+    if [ "$managementcidr" = "" ]; then managementcidr="$defaultmanagementcidr"; fi
+    if [ "$adminips" = "" ]; then adminips="$defaultadmincidr"; fi
+
+    if [ "$action" = "" ]; then echo "action cannot be null"; exit; fi
+    if [ "$adminips" = "" ]; then echo "adminips cannot be null"; exit; fi
+    if [ "$ami" = "" ]; then echo "ami cannot be null"; exit; fi
+    if [ "$instancetype" = "" ]; then echo "instancetype cannot be null"; exit; fi
+    if [ "$linuxami" = "" ]; then echo "linuxami cannot be null"; exit; fi
+    if [ "$publiccidr" = "" ]; then echo "publiccidr cannot be null"; exit; fi
+    if [ "$managementcidr" = "" ]; then echo "managementcidr cannot be null"; exit; fi
+    if [ "$webservercidr" = "" ]; then echo "webservercidr cannot be null"; exit; fi
+
+fi
 
 #if user has enters MFA token get a new session.
 echo "MFA token (default use active session):"
@@ -145,6 +161,9 @@ userarn=$(./execute/get_value.sh "user.txt" "Arn")
 account=$(./execute/get_value.sh "user.txt" "Account")
 user=$(cut -d "/" -f 2 <<< $userarn)
 mfaarn="arn:aws:iam::$account:mfa/$user"
+
+if [ "$user" = "" ]; then echo "adminuser cannot be null"; exit; fi
+if [ "$userarn" = "" ]; then echo "userarn cannot be null"; exit; fi
 
 if [ "$mfatoken" != "" ]
     then
@@ -163,24 +182,12 @@ if [ "$mfatoken" != "" ]
     exit
 fi
 
-if [ "$action" = "" ]; then echo "action cannot be null"; exit; fi
-if [ "$user" = "" ]; then echo "adminuser cannot be null"; exit; fi
-if [ "$adminips" = "" ]; then echo "adminips cannot be null"; exit; fi
-if [ "$userarn" = "" ]; then echo "userarn cannot be null"; exit; fi
-if [ "$ami" = "" ]; then echo "ami cannot be null"; exit; fi
-if [ "$instancetype" = "" ]; then echo "instancetype cannot be null"; exit; fi
-if [ "$linuxami" = "" ]; then echo "linuxami cannot be null"; exit; fi
-if [ "$publiccidr" = "" ]; then echo "publiccidr cannot be null"; exit; fi
-if [ "$managementcidr" = "" ]; then echo "managementcidr cannot be null"; exit; fi
-if [ "$webservercidr" = "" ]; then echo "webservercidr cannot be null"; exit; fi
-
-
 #if no errors create the stack
 echo "Executing: $action with $user as admin user with ips: $adminips ami: $ami instancetype: $instancetype $linuxami" 
 echo "* ------------------------------------------------------"
 echo "
-. ./execute/action.sh $action $user $adminips $userarn $ami $instancetype $linuxami $publiccidr $managementcidr $webservercidr"
-. ./execute/action.sh $action $user $adminips $userarn $ami $instancetype $linuxami $publiccidr $managementcidr $webservercidr
+. ./execute/action.sh $action $user $adminips $userarn $ami $instancetype $linuxami $publiccidr $managementcidr $webservercidr $deleteall"
+. ./execute/action.sh $action $user $adminips $userarn $ami $instancetype $linuxami $publiccidr $managementcidr $webservercidr $deleteall
 
 rm -f *.txt
 dt=$(date)
