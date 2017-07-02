@@ -13,9 +13,13 @@ logging.getLogger("paramiko").setLevel(logging.DEBUG)
 #referencing this AWS blog post which recommends paramiko for SSH:
 #https://aws.amazon.com/blogs/compute/scheduling-ssh-jobs-using-aws-lambda/
 
+#good error handling info
+#https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
+
 def configure_firebox(event, context):
     
     #get environment vars defined in lambda.yaml
+    #should validate these values ...
     bucket=os.environ['Bucket']
     fireboxip=os.environ['FireboxIp']
     managementsubnetcidr=os.environ['ManagementCidr']
@@ -26,104 +30,111 @@ def configure_firebox(event, context):
     localkeyfile="/tmp/fb.pem"
     s3=boto3.client('s3')
     
-    ###
-    #turn on detailed request logging to troubleshoot
-    #S3 endpoint connection errors
-    ###
+    #For troubleshooting AWS requests if needed
     #boto3.set_stream_logger(name='botocore')
-    
-    #####
-    #save key to lambda to use for CLI connection
-    #####
-    print ("Get SSH key from S3 bucket")
+
     s3.download_file(bucket, sshkey, localkeyfile)
 
-    #####
-    # Set up SSH client
-    ###
-    k = paramiko.RSAKey.from_private_key_file(localkeyfile)
-    c = paramiko.SSHClient()
-
+    channel, sshclient = connect(fireboxip, localkeyfile)
+    
     try:
+        #show some of the firebox configuration
+        #run_command(channel, "show global-setting")
+        run_command(channel, "show rule")
 
-        #override check in known hosts file
-        #https://github.com/paramiko/paramiko/issues/340
-        c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        print("connecting to " + fireboxip)
-        c.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = localkeyfile)
-        print("connected to " + fireboxip)
-
-        channel = c.invoke_shell()
-
+        #create required configuration
         run_command(channel, "configure")
         run_command(channel, "global-setting report-data enable")
         run_command(channel, "ntp enable")
         run_command(channel, "ntp device-as-server enable")
-        run_command(channel, "policy")
-        add_cidr_rule(channel, "admin-ssh", admincidr, managementsubnetcidr, "tcp", "22")
-        add_cidr_rule(channel, "admin-ssh", admincidr, webserversubnetcidr, "tcp", "22")
-        add_alias_rule(channel, "HTTP-proxy", "Any-Trusted", "Any-External", "tcp", "80")
-        add_alias_rule(channel, "HTTPS-proxy", "Any-Trusted", "Any-External", "tcp", "443")
+        add_rule(channel, "HTTP-Out", "HTTP-proxy", "Any-Trusted", "Any-External", "alias")
+        add_rule(channel, "HTTPS-Out", "HTTPS-proxy", "Any-Trusted", "Any-External", "alias")
+        add_policy_and_rule(channel, "admin-ssh-mgt", "admin-ssh", "tcp", "22", admincidr, managementsubnetcidr, "network-ip", "firewall allowed")
+        add_policy_and_rule(channel, "admin-ssh-web", "admin-ssh", "tcp", "22", admincidr, webserversubnetcidr, "network-ip", "firewall allowed")
+        
+    #if an exception was raised, print before exit  
     except ValueError as err:
         print(err.args)  
+        run_command(channel, "exit")
+
+    #always close connections in a finally block
     finally:
         if channel:
             channel.close()
             print ("channel closed")
-        if c:
-            c.close()
+        if sshclient:
+            sshclient.close()
             print ("connection closed")
 
     return 'success'
 
-#good error handling info
-#https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
-def add_alias_rule(channel, aliasfrom, aliasto, policyname, protocol, port):
+def connect(fireboxip, localkeyfile):
+    
+    k = paramiko.RSAKey.from_private_key_file(localkeyfile)
+    c = paramiko.SSHClient()
+    
+    #override check in known hosts file
+    #https://github.com/paramiko/paramiko/issues/340
+    c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    print("connecting to " + fireboxip)
+    c.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = localkeyfile)
+    print("connected to " + fireboxip)
+
+    channel = c.invoke_shell()
+
+    return channel, c
+
+def add_policy(channel, policyname, protocol, port):
     try:
-        run_command(channel, "rule https-out")
-        run_command(channel, "policy-type " + policyname + " from alias " + aliasfrom + " to " + aliasto + " Any-External")
-        run_command(channel, "apply")
-        run_command(channel, "exit")
+        run_command (channel, "policy")
+        run_command (channel, "policy-type " + policyname + " protocol " + protocol + " " + port)
+        run_command (channel, "apply")
+    except ValueError as err:
+        raise
+    finally:
+        run_command (channel, "exit") #policy mode exit
+
+def add_policy_and_rule(channel, rulename, policyname, protocol, port, addressfrom, addressto, type, options):
+    try:
+        add_policy(channel, policyname, protocol, port)
+        add_rule(channel, rulename, policyname, addressfrom, addressto, options)
     except ValueError as err:
         raise
 
-def add_cidr_rule(channel, cidrfrom, cidrto, policyname, protocol, port):
+def add_rule(channel, rulename, policyname, addressfrom, addressto, options):
     try:
-        run_command (channel, "policy-type " + policyname + " protocol " + protocol + " " + port)
-        run_command(channel, "policy-type " + policyname + " from network-ip " + cidrfrom + " to newtork-ip " + cidrto + " firebox allowed")
+        run_command(channel, "rule " + rulename)
+        run_command(channel, "policy-type " + policyname + " from alias " + aliasfrom + " to alias " + aliasto)
         run_command(channel, "apply")
-        run_command(channel, "exit")
     except ValueError as err:
         raise
+    finally:
+        run_command(channel, "exit") #rule mode exit
 
 def run_command(channel, command):
+
+    buff_size=2024
     c=command + "\n"
     channel.send(c)
-    time.sleep(3)
-    output=channel.recv(2024)
-    print(output)
-    #check for an error here and change the
-    #return value on error
-    if output.find('^')!=-1:
+
+    #wait for results to be buffered
+    while not (channel.recv_ready()):
+        if channel.exit_status_ready():
+            print ("Channel exiting. No data returned")
+            return
+        time.sleep(3) 
+
+    #print results 
+    while channel.recv_ready():
+        output=channel.recv(buff_size)
+        print(output)
+        
+    #WatchGuard errors have ^ in output
+    #throw an exception if we get a WatchGuard error
+    if output.find('^')!=-1 or output.find('Error')!=-1:
         raise ValueError('Error executing firebox command', command)
     
 
-#if content returned is too long can use this    
-def _wait_for_data(channel, options, verbose=False):
-    chan = channel
-    data = ""
-    while True:
-        x = chan.recv(1024)
-        if len(x) == 0:
-            self.log("*** Connection terminated\r")
-            sys.exit(3)
-        data += x
-        if verbose:
-            sys.stdout.write(x)
-            sys.stdout.flush()
-        for i in range(len(options)):
-            if re.search(options[i], data):
-                return i
-    return -1
+        
     
