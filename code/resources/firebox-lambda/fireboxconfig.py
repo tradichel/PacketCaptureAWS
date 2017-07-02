@@ -8,7 +8,8 @@ import time
 import logging
 import paramiko
 
-logging.getLogger("paramiko").setLevel(logging.DEBUG) 
+#cahnge to DEBUG for detailed error messages
+logging.getLogger("paramiko").setLevel(logging.ERROR) 
 
 #referencing this AWS blog post which recommends paramiko for SSH:
 #https://aws.amazon.com/blogs/compute/scheduling-ssh-jobs-using-aws-lambda/
@@ -39,26 +40,38 @@ def configure_firebox(event, context):
     
     try:
 
-        #show some of the firebox configuration
-        #run_command(channel, "show global-setting")
-        run_command(channel, "show rule")
+        try:
 
-        #create required configuration
-        run_command(channel, "configure")
-        run_command(channel, "global-setting report-data enable")
-        run_command(channel, "ntp enable")
-        run_command(channel, "ntp device-as-server enable")
-        add_rule(channel, "HTTP-Out", "HTTP-proxy", "Any-Trusted", "Any-External", "alias")
-        add_rule(channel, "HTTPS-Out", "HTTPS-proxy", "Any-Trusted", "Any-External", "alias")
-        add_policy_and_rule(channel, "admin-ssh-mgt", "admin-ssh", "tcp", "22", admincidr, managementsubnetcidr, "network-ip", "firewall allowed")
-        add_policy_and_rule(channel, "admin-ssh-web", "admin-ssh", "tcp", "22", admincidr, webserversubnetcidr, "network-ip", "firewall allowed")
-        run_command(channel, "exit") #exit configure
+            #main mode
+            #run_command(channel, "show rule")
+            #run_command(channel, "show policy-type")
+
+            #configure mode
+            run_command(channel, "configure")
+
+            #global settings
+            run_command(channel, "global-setting report-data enable")
+            run_command(channel, "ntp enable")
+            run_command(channel, "ntp device-as-server enable")
+
+            #rules
+            log=True
+
+            add_rule(channel, "admin-ssh-management", "admin-ssh",  admincidr, managementsubnetcidr, "network-ip", log)
+            add_rule(channel, "admin-ssh-web", "admin-ssh",  admincidr, webserversubnetcidr, "network-ip", log)
+        
+            add_rule(channel, "HTTPS-Out", "HTTPS-proxy", "Any-Trusted", "Any-External", "alias", log)
+            add_rule(channel, "HTTP-Out", "HTTP-proxy", "tcp", "80", "Any-Trusted", "Any-External", "alias", log)
+
+        except ValueError as err:
+            raise
+        finally:
+            run_command(channel, "exit") #exit configure mode
+            run_command(channel, "exit") #exit main mode
 
     #if an exception was raised, print before exit  
     except ValueError as err:
         print(err.args)  
-        run_command(channel, "exit") #exit configure
-
     #always close connections in a finally block
     finally:
         if channel:
@@ -93,27 +106,46 @@ def add_policy(channel, policyname, protocol, port):
         run_command (channel, "policy-type " + policyname + " protocol " + protocol + " " + port)
         run_command (channel, "apply")
     except ValueError as err:
-        raise
+        if str(err.args).find('already exists')!=-1:
+            raise
+        else:
+            print(err.args) 
     finally:
-        run_command (channel, "exit") 
+        run_command (channel, "exit") #poliy
 
 def add_policy_and_rule(channel, rulename, policyname, protocol, port, addressfrom, addressto, addrtype, options):
     try:
         add_policy(channel, policyname, protocol, port)
         add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, options)
     except ValueError as err:
-        raise
+        if str(err.args).find('already exists')!=-1:
+            raise
+        else:
+            print(err.args) 
 
-def add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, options):
+def add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, log):
     try:
         run_command (channel, "policy")
         run_command(channel, "rule " + rulename)
-        run_command(channel, "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto)
+       
+        rule = "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto
+        if addrtype=="alias":
+            rule = rule + " firewall allowed"
+        
+        run_command(channel, rule)
+
+        if log==True:
+            run_command(channel, "logging log-message enable")
+
         run_command(channel, "apply")
+
     except ValueError as err:
-        raise
+        if str(err.args).find('already exists')!=-1:
+            raise
+        else:
+            print(err.args) 
     finally:
-        run_command(channel, "exit") 
+        run_command (channel, "exit") #poliy
 
 def run_command(channel, command):
 
@@ -137,7 +169,4 @@ def run_command(channel, command):
     #throw an exception if we get a WatchGuard error
     if output.find('^')!=-1 or output.find('Error')!=-1:
         raise ValueError('Error executing firebox command', command)
-    
-
-        
     
