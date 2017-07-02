@@ -62,13 +62,7 @@ Resources:
             sed -i "s/server 3.$ntpsrv iburst//g" /etc/ntp.conf
             cat /etc/ntp.conf
             service ntpd start
-            yum update -y
-            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
-            chmod 700 /tmp/${fireboxkey}
-            ntpstat
-            echo "management ip {fireboxmanagementip}"
-            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip} -p 4118
-            tcpdump -x
+            
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'
