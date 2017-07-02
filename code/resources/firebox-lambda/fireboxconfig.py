@@ -38,6 +38,7 @@ def configure_firebox(event, context):
     channel, sshclient = connect(fireboxip, localkeyfile)
     
     try:
+
         #show some of the firebox configuration
         #run_command(channel, "show global-setting")
         run_command(channel, "show rule")
@@ -51,11 +52,12 @@ def configure_firebox(event, context):
         add_rule(channel, "HTTPS-Out", "HTTPS-proxy", "Any-Trusted", "Any-External", "alias")
         add_policy_and_rule(channel, "admin-ssh-mgt", "admin-ssh", "tcp", "22", admincidr, managementsubnetcidr, "network-ip", "firewall allowed")
         add_policy_and_rule(channel, "admin-ssh-web", "admin-ssh", "tcp", "22", admincidr, webserversubnetcidr, "network-ip", "firewall allowed")
-        
+        run_command(channel, "exit") #exit configure
+
     #if an exception was raised, print before exit  
     except ValueError as err:
         print(err.args)  
-        run_command(channel, "exit")
+        run_command(channel, "exit") #exit configure
 
     #always close connections in a finally block
     finally:
@@ -93,24 +95,25 @@ def add_policy(channel, policyname, protocol, port):
     except ValueError as err:
         raise
     finally:
-        run_command (channel, "exit") #policy mode exit
+        run_command (channel, "exit") 
 
-def add_policy_and_rule(channel, rulename, policyname, protocol, port, addressfrom, addressto, type, options):
+def add_policy_and_rule(channel, rulename, policyname, protocol, port, addressfrom, addressto, addrtype, options):
     try:
         add_policy(channel, policyname, protocol, port)
-        add_rule(channel, rulename, policyname, addressfrom, addressto, options)
+        add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, options)
     except ValueError as err:
         raise
 
-def add_rule(channel, rulename, policyname, addressfrom, addressto, options):
+def add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, options):
     try:
+        run_command (channel, "policy")
         run_command(channel, "rule " + rulename)
-        run_command(channel, "policy-type " + policyname + " from alias " + aliasfrom + " to alias " + aliasto)
+        run_command(channel, "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto)
         run_command(channel, "apply")
     except ValueError as err:
         raise
     finally:
-        run_command(channel, "exit") #rule mode exit
+        run_command(channel, "exit") 
 
 def run_command(channel, command):
 
