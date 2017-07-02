@@ -19,6 +19,17 @@ logging.getLogger("paramiko").setLevel(logging.ERROR)
 
 def configure_firebox(event, context):
     
+    #policy names
+    policy_http="HTTP-Proxy" #port 80
+    policy_https="HTTPS-Proxy" #port 443
+    policy_ssh="admin-ssh" #port 22
+
+    #rule names
+    rule_admin_ssh_management="admin-ssh-management"
+    rule_admin_ssh_web="admin-ssh-web"
+    rule_http_out="HTTP-Out"
+    rule_https_out="HTTPS-Out"
+
     #get environment vars defined in lambda.yaml
     #should validate these values ...
     bucket=os.environ['Bucket']
@@ -42,10 +53,6 @@ def configure_firebox(event, context):
 
         try:
 
-            #main mode
-            #run_command(channel, "show rule")
-            #run_command(channel, "show policy-type")
-
             #configure mode
             run_command(channel, "configure")
 
@@ -57,11 +64,11 @@ def configure_firebox(event, context):
             #rules
             log=True
 
-            add_rule(channel, "admin-ssh-management", "admin-ssh",  admincidr, managementsubnetcidr, "network-ip", log)
-            add_rule(channel, "admin-ssh-web", "admin-ssh",  admincidr, webserversubnetcidr, "network-ip", log)
-        
-            add_rule(channel, "HTTPS-Out", "HTTPS-proxy", "Any-Trusted", "Any-External", "alias", log)
-            add_rule(channel, "HTTP-Out", "HTTP-proxy", "tcp", "80", "Any-Trusted", "Any-External", "alias", log)
+            add_rule(channel, rule_admin_ssh_management, policy_ssh,  admincidr, managementsubnetcidr, "network-ip", log)
+            add_rule(channel, rule_admin_ssh_web, policy_ssh,  admincidr, webserversubnetcidr, "network-ip", log)
+
+            add_rule(channel, rule_https_out, policy_https, "Any-Trusted", "Any-External", "alias", log)
+            add_rule(channel, rule_http_out, policy_http, "Any-Trusted", "Any-External", "alias", log)
 
         except ValueError as err:
             raise
@@ -83,6 +90,12 @@ def configure_firebox(event, context):
 
     return 'success'
 
+def check_rule_exists(channel):
+    print("I want a better way to see if rules exist here")
+
+def check_policy_exists(channel):
+    print("I want a better way to see if policies exist here")
+
 def connect(fireboxip, localkeyfile):
     
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
@@ -100,6 +113,7 @@ def connect(fireboxip, localkeyfile):
 
     return channel, c
 
+
 def add_policy(channel, policyname, protocol, port):
     try:
         run_command (channel, "policy")
@@ -112,16 +126,6 @@ def add_policy(channel, policyname, protocol, port):
             print(err.args) 
     finally:
         run_command (channel, "exit") #poliy
-
-def add_policy_and_rule(channel, rulename, policyname, protocol, port, addressfrom, addressto, addrtype, options):
-    try:
-        add_policy(channel, policyname, protocol, port)
-        add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, options)
-    except ValueError as err:
-        if str(err.args).find('already exists')!=-1:
-            raise
-        else:
-            print(err.args) 
 
 def add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, log):
     try:
