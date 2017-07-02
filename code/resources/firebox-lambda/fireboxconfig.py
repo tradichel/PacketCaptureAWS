@@ -90,12 +90,6 @@ def configure_firebox(event, context):
 
     return 'success'
 
-def check_rule_exists(channel):
-    print("I want a better way to see if rules exist here")
-
-def check_policy_exists(channel):
-    print("I want a better way to see if policies exist here")
-
 def connect(fireboxip, localkeyfile):
     
     k = paramiko.RSAKey.from_private_key_file(localkeyfile)
@@ -149,7 +143,7 @@ def add_rule(channel, rulename, policyname, addressfrom, addressto, addrtype, lo
         else:
             print(err.args) 
     finally:
-        run_command (channel, "exit") #poliy
+        run_command (channel, "exit") #policy
 
 def run_command(channel, command):
 
