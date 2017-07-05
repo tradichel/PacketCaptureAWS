@@ -253,18 +253,8 @@ if [ "$action" == "delete" ]; then
 
     ./execute/delete_files.sh
     
-    #get our lambda ENI as we need to force a detachment
-    aws ec2 describe-network-interfaces --filter Name="requester-id",Values="*ConfigureFirebox" > lambda-eni.txt  2>&1
-    attachmentid=$(./execute/get_value.sh lambda-eni.txt "AttachmentId")
-    if [ "$attachmentid" != "" ]; then
-        echo "aws ec2 detach-network-interface --attachment-id $attachmentid --force"
-        aws ec2 detach-network-interface --attachment-id $attachmentid --force
+    ./execute/delete_lambda_eni.sh
 
-        networkinterfaceid=$(./execute/get_value.sh lambda-eni.txt "NetworkInterfaceId")
-        echo "aws ec2 delete-network-interface --network-interface-id $networkinterfaceid"
-        aws ec2 delete-network-interface --network-interface-id $networkinterfaceid
-    fi
-    
     stack=(
         "lambda"
         "kmskey"
@@ -358,6 +348,8 @@ else #create/update
     ./execute/upload_files.sh $keyname
 
     #first we need to delete the existing lambda to pick up updates
+    ./execute/delete_lambda_eni.sh
+    
     action="delete"
     stack=(
         "lambda"

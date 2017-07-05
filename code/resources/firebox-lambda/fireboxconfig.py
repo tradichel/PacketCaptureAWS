@@ -121,13 +121,18 @@ def connect(fireboxip):
 #This code assumes simply the rule exists not that it has the desired state
 #If trying to verify or change a rule this code would need to be enhanced
 def check_rule_exists(channel, rulename):
-    output = run_command(channel, "show rule " + rulename, False)
-    if(output.find("not found")==NOT_FOUND):
-        print("Rule " + rulename + " exists.")
-        return True
-    else:
-        print("Rule " + rulename + " does not exist.")
-        return False
+    
+    exist=False
+
+    try:
+        output = run_command(channel, "show rule " + rulename, False)
+        if(output.find("not found")==NOT_FOUND):
+            print("Rule " + rulename + " exists.")
+            exist=True
+    except ValueError as err:
+        print(err.args)  
+    
+    return exist
 
 def add_rule_and_policy(channel, policyname, protocol, port, rulename, addressfrom, addressto, addrtype, log):
     try:

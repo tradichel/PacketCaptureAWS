@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "Firebox Cloud Subnets"
+Description: "Packet Capture Test Route Tables"
 Parameters: 
 
   ParamStackName: 
