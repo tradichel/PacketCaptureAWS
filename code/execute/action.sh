@@ -251,6 +251,8 @@ function wait_to_complete () {
 #---Start of Script---#
 if [ "$action" == "delete" ]; then
 
+    ./execute/delete_files.sh
+    
     #get our lambda ENI as we need to force a detachment
     aws ec2 describe-network-interfaces --filter Name="requester-id",Values="*ConfigureFirebox" > lambda-eni.txt  2>&1
     attachmentid=$(./execute/get_value.sh lambda-eni.txt "AttachmentId")
@@ -277,7 +279,7 @@ if [ "$action" == "delete" ]; then
 
     modify_stack $action "instances" stack[@] 
 
-    if [ deleteall == "Y"]; then
+    if [ deleteall == "Y" ]; then
 
         stack=(
             "s3endpointegress"
@@ -379,9 +381,6 @@ else #create/update
     echo "* firebox instance running"
 
     ./execute/exec_lambda.sh
-
-    #need to make sure this is successful before continuing
-    exit
     
     stack=(
         "packetcaptureserver"
