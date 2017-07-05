@@ -65,7 +65,7 @@ Resources:
           
       Tags:
         - Key: Name
-          Value: TestWebServerForAWSPacketCapture
+          Value: TestWebServer
         - Key: Stack
           Value: !Ref ParamStackName
 Outputs:

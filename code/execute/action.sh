@@ -1,4 +1,7 @@
 #!/bin/sh
+#note. I would prefer to be using a different language
+# but this is how I started for non-programmers who
+#are familiar with command line scripting.
 action=$1
 adminuser=$2
 admincidr=$3
@@ -327,6 +330,7 @@ else #create/update
         "flowlogs"
         "firebox"
         "elasticip"
+        
     )
     modify_stack $action "network" stack[@] 
 
@@ -356,7 +360,18 @@ else #create/update
     )
     modify_stack $action "lambda" stack[@] 
 
+    #this code assumes one firebox in account
+    #would need to get fancier to handle multiple
+    aws ec2 describe-instances --filters Name=tag-value,Values=firebox-network-firebox Name=instance-state-name,Values=pending,running > firebox.txt  2>&1
+    fireboxinstanceid=$(./execute/get_value.sh firebox.txt "InstanceId")
+    echo "* waiting for firebox instance...see status check column in EC2 console"
+    aws ec2 wait instance-status-ok --instance-ids $fireboxinstanceid
+    echo "* firebox instance running"
+
     ./execute/exec_lambda.sh
+
+    #need to make sure this is successful before continuing
+    exit
     
     stack=(
         "packetcaptureserver"
