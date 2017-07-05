@@ -118,6 +118,8 @@ def connect(fireboxip):
 
     return channel, c
 
+#This code assumes simply the rule exists not that it has the desired state
+#If trying to verify or change a rule this code would need to be enhanced
 def check_rule_exists(channel, rulename):
     output = run_command(channel, "show rule " + rulename, False)
     if(output.find("not found")==NOT_FOUND):
