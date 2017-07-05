@@ -251,8 +251,18 @@ function wait_to_complete () {
 #---Start of Script---#
 if [ "$action" == "delete" ]; then
 
-    ./execute/delete_files.sh
+    #get our lambda ENI as we need to force a detachment
+    aws ec2 describe-network-interfaces --filter Name="requester-id",Values="*ConfigureFirebox" > lambda-eni.txt  2>&1
+    attachmentid=$(./execute/get_value.sh lambda-eni.txt "AttachmentId")
+    if [ "$attachmentid" != "" ]; then
+        echo "aws ec2 detach-network-interface --attachment-id $attachmentid --force"
+        aws ec2 detach-network-interface --attachment-id $attachmentid --force
 
+        networkinterfaceid=$(./execute/get_value.sh lambda-eni.txt "NetworkInterfaceId")
+        echo "aws ec2 delete-network-interface --network-interface-id $networkinterfaceid"
+        aws ec2 delete-network-interface --network-interface-id $networkinterfaceid
+    fi
+    
     stack=(
         "lambda"
         "kmskey"
