@@ -17,11 +17,8 @@ LOCAL_KEY_FILE="/tmp/fb.pem"
 #policy names
 POLICY_HTTP="HTTP-proxy" #port 80
 POLICY_HTTPS="HTTPS-proxy" #port 443
-POLICY_SSH="admin-ssh" #port 22
 
 #rule names
-RULE_SSH_MANAGE="admin-ssh-management"
-RULE_SSH_WEB="admin-ssh-web"
 RULE_HTTP_OUT="HTTP-Out"
 RULE_HTTPS_OUT="HTTPS-Out"
 
@@ -31,7 +28,6 @@ LOG_TRAFFIC=True #log network rules
 
 #good error handling info
 #https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
-
 def configure_firebox(event, context):
 
     #get environment vars defined in lambda.yaml
@@ -54,8 +50,7 @@ def configure_firebox(event, context):
     try:
 
         #run_command(channel, "show policy-type")
-        rule_ssh_manage_exists = check_rule_exists(channel, RULE_SSH_MANAGE)
-        rule_ssh_web_exists = check_rule_exists(channel, RULE_SSH_WEB)
+
         rule_https_out_exists = check_rule_exists(channel, RULE_HTTPS_OUT)
         rule_http_out_exists = check_rule_exists(channel, RULE_HTTP_OUT)
 
@@ -70,15 +65,11 @@ def configure_firebox(event, context):
             run_command(channel, "ntp device-as-server enable")
 
             #rules and policies
-            if (rule_ssh_manage_exists == False):
-                add_rule_and_policy(channel, POLICY_SSH, "tcp", "22", RULE_SSH_MANAGE,  admincidr, managementsubnetcidr, "network-ip", LOG_TRAFFIC)
-            if (rule_ssh_web_exists == False):
-                add_rule(channel, RULE_SSH_WEB, POLICY_SSH,  admincidr, webserversubnetcidr, "network-ip", LOG_TRAFFIC)
             if (rule_https_out_exists == False):
                 add_rule(channel, RULE_HTTPS_OUT, POLICY_HTTPS, "Any-Trusted", "Any-External", "alias", LOG_TRAFFIC)
             if (rule_http_out_exists == False):
                 add_rule(channel, RULE_HTTP_OUT, POLICY_HTTP, "Any-Trusted", "Any-External", "alias", LOG_TRAFFIC)
-
+                
         except ValueError as err:
             raise
         finally:

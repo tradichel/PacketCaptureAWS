@@ -164,7 +164,7 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamWebServerSubnetCidr,ParameterValue=$webservercidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
-    if [ "$stack" == "lambda" ]; then
+    if [ "$stack" == "lambda" ] || [ "$stack" == "lambdasnat" ] ; then
         echo "$stackparameter ParameterKey=ParamManagementCidr,ParameterValue=$managementcidr ParameterKey=ParamWebServerCidr,ParameterValue=$webservercidr  ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
     fi
 
@@ -251,9 +251,7 @@ function wait_to_complete () {
 #---Start of Script---#
 if [ "$action" == "delete" ]; then
 
-    ./execute/delete_files.sh
-    
-    ./execute/delete_lambda_eni.sh
+    ./execute/delete_lambda_eni.sh "ConfigureFirebox"
 
     stack=(
         "lambda"
@@ -268,6 +266,16 @@ if [ "$action" == "delete" ]; then
     )
 
     modify_stack $action "instances" stack[@] 
+
+    ./execute/delete_lambda_eni.sh "ConfigureSnat"
+
+    stack=(
+        "lambdasnat"
+    )
+
+    modify_stack $action "lambda" stack[@] 
+
+    ./execute/delete_files.sh
 
     if [ deleteall == "Y" ]; then
 
@@ -288,12 +296,12 @@ if [ "$action" == "delete" ]; then
             "firebox"
             "sgs3cidrs"
             "sgssh"
-            "sgmanagementeni"
             "sgpubliceni"
             "sgwebservereni"
             "sbwebserver"
             "sgwebserver"
             "sbpublic"
+            "sgmanagement"
             "sbmanagement"
             "routetables"
             "internetgateway"
@@ -372,7 +380,7 @@ else #create/update
     aws ec2 wait instance-status-ok --instance-ids $fireboxinstanceid
     echo "* firebox instance running"
 
-    ./execute/exec_lambda.sh
+    ./execute/exec_lambda.sh "ConfigureFirebox"
     
     stack=(
         "packetcaptureserver"
@@ -380,6 +388,24 @@ else #create/update
     )
 
     modify_stack $action "instances" stack[@] 
+
+   ./execute/delete_lambda_eni.sh
+    
+    action="delete"
+    stack=(
+        "lambdasnat"
+    )
+    modify_stack $action "lambda" stack[@] 
+
+    #then we can create or update the lambda
+    action="create"
+    stack=(
+        "lambdasnat"
+    )
+    modify_stack $action "lambda" stack[@] 
+
+    ./execute/exec_lambda.sh "ConfigureSNAT"
+    
     
 fi
 

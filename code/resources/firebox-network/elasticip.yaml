@@ -15,4 +15,3 @@ Resources:
         !GetAtt FireboxElasticIP.AllocationId
       NetworkInterfaceId:
         !ImportValue FireboxPublicNetworkInterface
-  

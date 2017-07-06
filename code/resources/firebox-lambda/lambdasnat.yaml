@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Firebox SNAT Lambda"
+Parameters: 
+  ParamStackName: 
+    Type: String
+    Description: "Name used in resource tags and names"
+  ParamWebServerCidr: 
+    Type: String
+    Description: "Cidr Block for Web Servers"
+  ParamManagementCidr: 
+    Type: String
+    Description: "Cidr Block for Management"
+  ParamAdminCidr: 
+    Type: String
+    Description: "Cidr Block for Admin Users"
+  
+Resources:
+  FireboxSnatLambda:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Code:
+        S3Bucket: !ImportValue FireboxPrivateBucket
+        S3Key: fireboxconfig.zip
+      Description: Firebox Lambda to Execute CLI Commands
+      Environment:
+        Variables:
+          Bucket: !ImportValue FireboxPrivateBucket
+          FireboxIp: !ImportValue FireboxPrimaryManagementIpAddress
+          WebServerIP: !Ref ParamWebServerCidr
+          PacketCaptureServerIP: !Ref ParamManagementCidr
+          AdminCidr: !Ref ParamAdminCidr
+          Key: "firebox-cli-ec2-key.pem"
+      FunctionName: ConfigureSnat
+      Handler: fireboxconfig.configure_firebox
+      KmsKeyArn: !ImportValue FireboxKmsKeyArn
+      MemorySize: 128
+      Role: !ImportValue FireboxLambdaCLIRoleArn
+      Runtime: python2.7
+      Timeout: 90
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue FireboxManagementSecurityGroup
+        SubnetIds:
+          - !ImportValue FireboxManagementSubnet
+      Tags:
+        - Key: Name
+          Value: FireboxLambdaSnat
+        - Key: Stack
+          Value: !Ref ParamStackName
