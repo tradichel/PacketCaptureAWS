@@ -1,8 +1,8 @@
-Packet Capture on AWS
+# Packet Capture on AWS
 
 Questions? DM me @TeriRadichel on Twitter.
 
-About This Repo:
+## About This Repo:
 
     This repo creates the following AWS resources:
   
@@ -19,7 +19,7 @@ About This Repo:
     - A Web Server to test packet capture
     - All the necessary networking and IAM resources
 
-Before You Run This Script:
+## Before You Run This Script:
 
     Create an AWS account:
     https://aws.amazon.com (click the button to create an account)
@@ -49,7 +49,7 @@ Before You Run This Script:
     Follow AWS IAM Best Practices (like MFA)
     http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
 
-Run the code:
+## Run the code:
 
     Log into the console using MFA.
 
@@ -82,13 +82,13 @@ Run the code:
     To delete all the resources run the script again and choose delete.
 
 
-View The Results:
+## View The Results:
 
     Watch the screen for updates.
 
     Log into the console to see that actions were successful
     
-To read articles and papers related to this code:
+## About The Author:
 
 @teriradichel
 http://twitter.com/teriradichel
@@ -102,7 +102,7 @@ https://www.slideshare.net/TeriRadichel
 AWS Network Security Meetup Video:
 https://youtu.be/DSptV0km1aY
 
-More about Firebox Cloud:
+## More about Firebox Cloud:
 
 Set Up firebox_cloud Cloud:
 https://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/firebox_cloud/fb_cloud_help_intro.html
@@ -113,7 +113,7 @@ https://www.watchguard.com/wgrd-help/documentation/xtm
 Contact a WatchGuard reseller:
 http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
 
-Some resellers sell on Amazon:
+* Some resellers sell on Amazon:
 https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
 
 
