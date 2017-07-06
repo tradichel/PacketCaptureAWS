@@ -94,7 +94,7 @@ Questions? DM me @TeriRadichel on Twitter.
 http://twitter.com/teriradichel
 
 Secplicity
-https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
+https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=gh
     
 Slideshare
 https://www.slideshare.net/TeriRadichel
@@ -111,11 +111,10 @@ Latest Firebox Documentation:
 https://www.watchguard.com/wgrd-help/documentation/xtm
     
 Contact a WatchGuard reseller:
-http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
+http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh
 
 Some resellers sell on Amazon:
-https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
-
+https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh
 
 
 
