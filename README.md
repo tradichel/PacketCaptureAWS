@@ -90,35 +90,31 @@ View The Results:
     
 To read articles and papers related to this code:
 
-    - Follow me on Twitter:
+@teriradichel
+http://twitter.com/teriradichel
 
-        @teriradichel
-
-    - Follow me on Secplicity
-
-        https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
+Secplicity
+https://www.secplicity.org/author/teriradichel/?utm_source=teriradichel&utm_medium=Twitter&utm_campaign=gh
     
-    - Presentations
+Slideshare
+https://www.slideshare.net/TeriRadichel
 
-        https://www.slideshare.net/TeriRadichel
-
-    - AWS Network Security Video:
-    
-        https://youtu.be/DSptV0km1aY
+AWS Network Security Meetup Video:
+https://youtu.be/DSptV0km1aY
 
 More about Firebox Cloud:
 
-    Set Up firebox_cloud Cloud:
-    https://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/firebox_cloud/fb_cloud_help_intro.html
+Set Up firebox_cloud Cloud:
+https://www.watchguard.com/help/docs/fireware/11/en-US/Content/en-US/firebox_cloud/fb_cloud_help_intro.html
 
-    Latest Firebox Documentation:
-    https://www.watchguard.com/wgrd-help/documentation/xtm
+Latest Firebox Documentation:
+https://www.watchguard.com/wgrd-help/documentation/xtm
     
-    Contact a WatchGuard reseller:
-    http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
+Contact a WatchGuard reseller:
+http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
 
-    Some resellers sell on Amazon:
-    https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
+Some resellers sell on Amazon:
+https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
 
 
 
