@@ -113,7 +113,7 @@ https://www.watchguard.com/wgrd-help/documentation/xtm
 Contact a WatchGuard reseller:
 http://www.watchguard.com/wgrd-resource-center/how-to-buy?utm_source=teriradichel&utm_medium=gh&utm_campaign=gh
 
-* Some resellers sell on Amazon:
+Some resellers sell on Amazon:
 https://www.amazon.com/s/ref=nb_sb_noss_1?url=search-alias%3Daps&field-keywords=watchguard&utm_source=teriradichel&&utm_medium=gh&utm_campaign=gh
 
 
