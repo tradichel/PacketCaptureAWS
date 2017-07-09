@@ -13,16 +13,19 @@ aws ec2 describe-network-interfaces --filter Name="requester-id",Values="*$lambd
 attachmentid=$(./execute/get_value.sh lambda-eni.txt "AttachmentId")
 
 if [ "$attachmentid" != "" ]; then
+
     echo "aws ec2 detach-network-interface --attachment-id $attachmentid --force"
-    aws ec2 detach-network-interface --attachment-id $attachmentid --force
+    aws ec2 detach-network-interface --attachment-id $attachmentid --force > detach-lambda-eni.txt  2>&1
+    error=$(cat detach-lambda-eni.txt | grep "error")
 
-    #I don't see a good way to wait for the network interface to detach.
-    #Pausing a few here and hope that works.
-    SLEEP 8
+    if [ "$error" == "" ]; then
 
-    networkinterfaceid=$(./execute/get_value.sh lambda-eni.txt "NetworkInterfaceId")
-    echo "aws ec2 delete-network-interface --network-interface-id $networkinterfaceid"
-    output=$(aws ec2 delete-network-interface --network-interface-id $networkinterfaceid)
+        networkinterfaceid=$(./execute/get_value.sh lambda-eni.txt "NetworkInterfaceId")
+        echo "aws ec2 delete-network-interface --network-interface-id $networkinterfaceid"
+        output=$(aws ec2 delete-network-interface --network-interface-id $networkinterfaceid)
+    else
+        cat detach-lambda-eni.txt
+    fi
 
     #threshold reached
     if [ "$count" == "$threshold" ]; then return; fi

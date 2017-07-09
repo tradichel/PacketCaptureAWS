@@ -89,7 +89,7 @@ Outputs:
     Value: !Ref PacketCaptureServer
     Export:
       Name: "PacketCaptureServer"
-  WebServerIPAddress:
+  PacketCaptureServerIPAddress:
     Value: !GetAtt PacketCaptureServer.PrivateIp
     Export:
-      Name: "PacketCaptureServerPrivateIp"
+      Name: "PacketCaptureServerIPAddress"

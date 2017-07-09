@@ -1,19 +1,11 @@
 #!/bin/sh
-script="fireboxconfig.py"
-script2="fireboxsnat.py"
-
 #note: If you want to see how the lambda.zip file was craeted, read this:
 #http://websitenotebook.blogspot.com/2017/05/creating-paramiko-and-cryptography.html
 keyname=$1
-#remove existing file
-if [ -f ./resources/firebox-lambda/fireboxconfig.zip ]; then rm ./resources/firebox-lambda/fireboxconfig.zip; fi
 
-#make a copy of lambda.zip
-cp ./resources/firebox-lambda/lambda.zip ./resources/firebox-lambda/fireboxconfig.zip
+./execute/make_zip.sh
 
-#add py files to fireboxconfig.zip
-zip -g -j ./resources/firebox-lambda/fireboxconfig.zip ./resources/firebox-lambda/$script
-zip -g -j ./resources/firebox-lambda/fireboxconfig.zip ./resources/firebox-lambda/$script2
+
 
 #upload the lambda code to the bucket used by lambda cloudformation file
 bucket=$(./execute/get_output_value.sh "firebox-cli-s3bucket" "FireboxPrivateBucket")

@@ -252,12 +252,13 @@ function wait_to_complete () {
 if [ "$action" == "delete" ]; then
 
     ./execute/delete_lambda_eni.sh "ConfigureFirebox"
+    ./execute/delete_lambda_eni.sh "ConfigureSnat"
 
     stack=(
         "lambda"
+        "lambdasnat"
         "kmskey"
     )
-
     modify_stack $action "lambda" stack[@] 
 
     stack=(
@@ -266,14 +267,6 @@ if [ "$action" == "delete" ]; then
     )
 
     modify_stack $action "instances" stack[@] 
-
-    ./execute/delete_lambda_eni.sh "ConfigureSnat"
-
-    stack=(
-        "lambdasnat"
-    )
-
-    modify_stack $action "lambda" stack[@] 
 
     ./execute/delete_files.sh
 
@@ -359,9 +352,7 @@ else #create/update
     ./execute/delete_lambda_eni.sh
     
     action="delete"
-    stack=(
-        "lambda"
-    )
+    stack=("lambda")
     modify_stack $action "lambda" stack[@] 
 
     #then we can create or update the lambda
@@ -382,6 +373,9 @@ else #create/update
 
     ./execute/exec_lambda.sh "ConfigureFirebox"
     
+    echo "exit while testing"
+    exit
+    
     stack=(
         "packetcaptureserver"
         "webserver"
@@ -392,20 +386,15 @@ else #create/update
    ./execute/delete_lambda_eni.sh
     
     action="delete"
-    stack=(
-        "lambdasnat"
-    )
+    stack=("lambdasnat")
     modify_stack $action "lambda" stack[@] 
 
     #then we can create or update the lambda
     action="create"
-    stack=(
-        "lambdasnat"
-    )
+    stack=("lambdasnat")
     modify_stack $action "lambda" stack[@] 
 
-    ./execute/exec_lambda.sh "ConfigureSNAT"
-    
+    ./execute/exec_lambda.sh "ConfigureSnat"
     
 fi
 

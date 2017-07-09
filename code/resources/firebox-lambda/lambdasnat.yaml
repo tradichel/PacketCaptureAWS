@@ -26,8 +26,8 @@ Resources:
         Variables:
           Bucket: !ImportValue FireboxPrivateBucket
           FireboxIp: !ImportValue FireboxPrimaryManagementIpAddress
-          WebServerIP: !Ref ParamWebServerCidr
-          PacketCaptureServerIP: !Ref ParamManagementCidr
+          WebServerIP: !ImportValue WebServerIPAddress
+          PacketCaptureServerIP: !ImportValue PacketCaptureServerIPAddress
           AdminCidr: !Ref ParamAdminCidr
           Key: "firebox-cli-ec2-key.pem"
       FunctionName: ConfigureSnat
