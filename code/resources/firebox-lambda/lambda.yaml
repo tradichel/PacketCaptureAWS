@@ -30,7 +30,8 @@ Resources:
           ManagementCidr: !Ref ParamManagementCidr
           AdminCidr: !Ref ParamAdminCidr
           Key: "firebox-cli-ec2-key.pem"
-      
+      TracingConfig: 
+        Mode: PassThrough
       FunctionName: ConfigureFirebox
       Handler: fireboxconfig.configure_firebox
       KmsKeyArn: !ImportValue FireboxKmsKeyArn

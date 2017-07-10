@@ -41,6 +41,16 @@ Resources:
             Action: 
               - "s3:ListBucket"
             Resource: !ImportValue FireboxPrivateBucketArn
+          - 
+            Effect: "Allow"
+            Action: 
+              - "xray:PutTelemetryRecords"
+            Resource: !ImportValue FireboxPrivateBucketArn
+          - 
+            Effect: "Allow"
+            Action: 
+              - "xray:PutTraceSegments"
+            Resource: !ImportValue FireboxPrivateBucketArn
       Roles: 
         - 
           !Ref FireboxCliRole

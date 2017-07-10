@@ -23,6 +23,8 @@ class fireboxcommands:
 
     def __init__(self, bucket, sshkey, fireboxip):
         
+        clone = self
+
         local_key_file="/tmp/fb.pem"
 
         #For troubleshooting AWS requests if needed
@@ -36,13 +38,9 @@ class fireboxcommands:
             raise #last time this failed was DNS error
 
         print ("try to connect to Firebox")
-        
-        return clone
-
-    def connect():
         try:
-            clone = self
-            k = paramiko.RSAKey.from_private_key_file(localkeyfile)
+          
+            k = paramiko.RSAKey.from_private_key_file(sshkey)
             clone.sshclient = paramiko.SSHClient()
             #override check in known hosts file
             #https://github.com/paramiko/paramiko/issues/340
@@ -54,6 +52,8 @@ class fireboxcommands:
             raise
 
         print("connected to " + fireboxip)
+        
+        return clone
 
     #run from main mode
     def check_exists( object, name ):
