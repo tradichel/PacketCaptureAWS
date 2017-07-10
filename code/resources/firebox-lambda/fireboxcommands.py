@@ -3,6 +3,8 @@ import paramiko
 import time
 import logging
 
+NOT_FOUND=-1
+
 ##NOTE: If you are logged into the Firebox while trying to run 
 ##this Lambda function it will fail because only one admin can 
 ##edit at one time. Any issues with this DM me on Twitter.
@@ -22,9 +24,8 @@ class fireboxcommands:
     logging.getLogger("paramiko").setLevel(logging.DEBUG) 
 
     def __init__(self, bucket, sshkey, fireboxip):
-        print "never called"
 
-    def __new__(cls):
+        clone=self
 
         local_key_file="/tmp/fb.pem"
 
@@ -42,12 +43,13 @@ class fireboxcommands:
         try:
           
             k = paramiko.RSAKey.from_private_key_file(local_key_file)
-            self.sshclient = paramiko.SSHClient()
+            clone.sshclient = paramiko.SSHClient()
             #override check in known hosts file
             #https://github.com/paramiko/paramiko/issues/340
-            self.sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.sshclient.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = local_key_file)
-            self.channel = self.sshclient.invoke_shell()
+            clone.sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            clone.sshclient.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = local_key_file)
+            clone.channel = clone.sshclient.invoke_shell()
+
         except:
             print ("cannot connect to firebox")
             raise
@@ -80,9 +82,11 @@ class fireboxcommands:
                 print(err.args)   
     
     #run from main mode (?)
-    def add_alias(self, name, description, aliastype, address):
+    def add_alias(self, name, description, aliastype, address, aliasexists):
         try:
-            command="alias " + name + " description " + description + " " + aliastype + " " + address
+            if aliasexists == True:
+                self.delete("alias", name)
+            command="alias " + name + " " + aliastype + " " + address
             self.exe(command)
         except ValueError as err:
             raise
@@ -103,7 +107,7 @@ class fireboxcommands:
             if output.find('already exists')!=-NOT_FOUND:
                 print("rule already exits")
             else:
-                run_command ("apply")
+                self.exe("apply")
 
         except ValueError as err:
             if str(err.args).find('already exists')!=NOT_FOUND:
@@ -114,13 +118,16 @@ class fireboxcommands:
             print ("exit policy mode")
             self.exe("exit") #policy
 
+    def delete(self, itemtype, name):
+        self.exe("no " + itemtype + " " + name)
+
     #run from policy mode
     def add_rule(self, rulename, policyname, addressfrom, addressto, addrtype, log, ruleexists):
         try:
 
             #remove existing rule and re-add it
             if ruleexists==True:
-                run_command("no rule " + rulename)
+                self.delete("rule ", rulename)
             self.exe("policy")
             self.exe("rule " + rulename)
            
@@ -143,7 +150,7 @@ class fireboxcommands:
             print("exit policy mode")
             self.exe("exit") #policy
 
-    #run command
+    #run_command
     def exe(self, command, printoutput=True):
 
         buff_size=2024
@@ -151,15 +158,15 @@ class fireboxcommands:
         self.channel.send(c)
 
         #wait for results to be buffered
-        while not (channel.recv_ready()):
-            if channel.exit_status_ready():
+        while not (self.channel.recv_ready()):
+            if self.channel.exit_status_ready():
                 print ("Channel exiting. No data returned")
                 return
             time.sleep(3) 
 
         #print results 
-        while channel.recv_ready():
-            output=channel.recv(buff_size)
+        while self.channel.recv_ready():
+            output=self.channel.recv(buff_size)
             if printoutput==True:
                 print(output)
             
@@ -170,8 +177,8 @@ class fireboxcommands:
 
         return output
 
-    def exit():
-        run_command("exit")
+    def exit(self):
+        self.exe("exit")
 
     #always close connections in a finally block
     def close_connections(self):

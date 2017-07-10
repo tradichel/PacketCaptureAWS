@@ -8,7 +8,7 @@ POLICY_HTTP="HTTP-proxy" #port 80
 POLICY_HTTPS="HTTPS-proxy" #port 443
 RULE_HTTP_OUT="HTTP-Out"
 RULE_HTTPS_OUT="HTTPS-Out"
-ALIAS_NTP="NTP_Pool"
+ALIAS_NTP="NTP-Pool"
 
 LOG_TRAFFIC=True #log network rules
 
@@ -22,14 +22,15 @@ def configure_firebox(event, context):
     managementsubnetcidr=os.environ['ManagementCidr']
     webserversubnetcidr=os.environ['WebServerCidr']
     admincidr=os.environ['AdminCidr']
-
+    
     cmd = fireboxcommands(bucket, sshkey, fireboxip)    
     
     try:
 
         rule_https_out_exists = cmd.check_exists("rule", RULE_HTTPS_OUT)
         rule_http_out_exists = cmd.check_exists("rule", RULE_HTTP_OUT)
-        
+        alias_ntp_exists = cmd.check_exists("alias", ALIAS_NTP)
+
         try:
 
             #configure mode
@@ -43,7 +44,7 @@ def configure_firebox(event, context):
             cmd.exe("ntp device-as-server enable")
 
             #alias for NTP FQDN
-            cmd.add_alias (ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
+            cmd.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
 
             #fix the NTP rule to only go to desired hosts. By default it goes anywhere in the Internet
             cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", ALIAS_NTP, "alias", LOG_TRAFFIC, True)
