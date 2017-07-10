@@ -40,7 +40,7 @@ class fireboxcommands:
         print ("try to connect to Firebox")
         try:
           
-            k = paramiko.RSAKey.from_private_key_file(sshkey)
+            k = paramiko.RSAKey.from_private_key_file(local_key_file)
             clone.sshclient = paramiko.SSHClient()
             #override check in known hosts file
             #https://github.com/paramiko/paramiko/issues/340

@@ -45,12 +45,12 @@ Resources:
             Effect: "Allow"
             Action: 
               - "xray:PutTelemetryRecords"
-            Resource: !ImportValue FireboxPrivateBucketArn
+            Resource: "*"
           - 
             Effect: "Allow"
             Action: 
               - "xray:PutTraceSegments"
-            Resource: !ImportValue FireboxPrivateBucketArn
+            Resource: "*" 
       Roles: 
         - 
           !Ref FireboxCliRole
