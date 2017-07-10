@@ -19,16 +19,17 @@ class fireboxcommands:
     channel=None
     sshclient=None
     
-    #logging.getLogger("paramiko").setLevel(logging.DEBUG) 
+    logging.getLogger("paramiko").setLevel(logging.DEBUG) 
 
     def __init__(self, bucket, sshkey, fireboxip):
-        
-        clone = self
+        print "never called"
+
+    def __new__(cls):
 
         local_key_file="/tmp/fb.pem"
 
         #For troubleshooting AWS requests if needed
-        #boto3.set_stream_logger(name='botocore')
+        boto3.set_stream_logger(name='botocore')
         s3=boto3.client('s3')
 
         try:
@@ -41,26 +42,24 @@ class fireboxcommands:
         try:
           
             k = paramiko.RSAKey.from_private_key_file(local_key_file)
-            clone.sshclient = paramiko.SSHClient()
+            self.sshclient = paramiko.SSHClient()
             #override check in known hosts file
             #https://github.com/paramiko/paramiko/issues/340
-            clone.sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            clone.sshclient.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = local_key_file)
-            clone.channel = clone.sshclient.invoke_shell()
+            self.sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.sshclient.connect( hostname = fireboxip, port = 4118, username = "admin", key_filename = local_key_file)
+            self.channel = self.sshclient.invoke_shell()
         except:
             print ("cannot connect to firebox")
             raise
 
         print("connected to " + fireboxip)
-        
-        return clone
 
     #run from main mode
-    def check_exists( object, name ):
+    def check_exists(self, object, name ):
         exist=False
 
         try:
-            output = run_command( "show " + object + name, False)
+            output = self.exe("show " + object + name, False)
             if(output.find("not found")==NOT_FOUND):
                 print(object + " " + name + " exists.")
                 exist=True
@@ -70,10 +69,10 @@ class fireboxcommands:
         return exist      
 
     #run from configuration mode
-    def add_snat(snatname, extip, intip, port):
+    def add_snat(self, snatname, extip, intip, port):
         try:
             command="snat static-nat " + snatname + " external-ip " + extip + " " + intip + " port " + port
-            run_command(command)
+            self.exe(command)
         except ValueError as err:
             if str(err.args).find('already exists')!=NOT_FOUND:
                 raise
@@ -81,14 +80,15 @@ class fireboxcommands:
                 print(err.args)   
     
     #run from main mode (?)
-    def add_alias(name, description, aliastype, address):
+    def add_alias(self, name, description, aliastype, address):
         try:
             command="alias " + name + " description " + description + " " + aliastype + " " + address
+            self.exe(command)
         except ValueError as err:
             raise
 
     #run from policy mode
-    def add_rule_and_policy(policyname, protocol, port, rulename, addressfrom, addressto, addrtype, log):
+    def add_rule_and_policy(self, policyname, protocol, port, rulename, addressfrom, addressto, addrtype, log):
         try:
             add_policy(policyname, protocol, port)
             add_rule(rulename, policyname, addressfrom, addressto, addrtype, log)
@@ -96,10 +96,10 @@ class fireboxcommands:
             raise
 
     #run from policy mode
-    def add_policy(policyname, protocol, port):
+    def add_policy(self, policyname, protocol, port):
         try:
-            run_command ("policy")
-            output = run_command ("policy-type " + policyname + " protocol " + protocol + " " + port)
+            self.exe("policy")
+            output = self.exe("policy-type " + policyname + " protocol " + protocol + " " + port)
             if output.find('already exists')!=-NOT_FOUND:
                 print("rule already exits")
             else:
@@ -112,27 +112,27 @@ class fireboxcommands:
                 print(err.args) 
         finally:
             print ("exit policy mode")
-            run_command ("exit") #policy
+            self.exe("exit") #policy
 
     #run from policy mode
-    def add_rule(rulename, policyname, addressfrom, addressto, addrtype, log, ruleexists):
+    def add_rule(self, rulename, policyname, addressfrom, addressto, addrtype, log, ruleexists):
         try:
 
             #remove existing rule and re-add it
             if ruleexists==True:
                 run_command("no rule " + rulename)
-            run_command ("policy")
-            run_command("rule " + rulename)
+            self.exe("policy")
+            self.exe("rule " + rulename)
            
             rule = "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto
             if addrtype=="alias":
                 rule = rule + " firewall allowed"
-            run_command(rule)
+            self.exe(rule)
 
             if log==True:
-                run_command("logging log-message enable")
+                self.exe("logging log-message enable")
 
-            run_command("apply")
+            self.exe("apply")
 
         except ValueError as err:
             if str(err.args).find('already exists')!=NOT_FOUND:
@@ -140,15 +140,15 @@ class fireboxcommands:
             else:
                 print(err.args) 
         finally:
-            print ("exit policy mode")
-            run_command ("exit") #policy
+            print("exit policy mode")
+            self.exe("exit") #policy
 
     #run command
-    def exe(command, printoutput=True):
+    def exe(self, command, printoutput=True):
 
         buff_size=2024
         c=command + "\n"
-        channel.send(c)
+        self.channel.send(c)
 
         #wait for results to be buffered
         while not (channel.recv_ready()):
@@ -174,11 +174,11 @@ class fireboxcommands:
         run_command("exit")
 
     #always close connections in a finally block
-    def close_connections():
-        if channel:
-            channel.close()
+    def close_connections(self):
+        if self.channel:
+            self.channel.close()
             print ("channel closed")
         
-        if sshclient:
-            sshclient.close()
+        if self.sshclient:
+            self.sshclient.close()
             print ("connection closed")
