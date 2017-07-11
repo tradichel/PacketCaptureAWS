@@ -61,7 +61,7 @@ class fireboxcommands:
         exist=False
 
         try:
-            output = self.exe("show " + object + name, False)
+            output = self.exe("show " + object + " " + name, False)
             if(output.find("not found")==NOT_FOUND):
                 print(object + " " + name + " exists.")
                 exist=True
@@ -86,7 +86,7 @@ class fireboxcommands:
         try:
             if aliasexists == True:
                 self.delete("alias", name)
-            command="alias " + name + " " + aliastype + " " + address
+            command="alias " + name + " " + aliastype + " \"" + address + "\""        
             self.exe(command)
         except ValueError as err:
             raise
@@ -102,53 +102,39 @@ class fireboxcommands:
     #run from policy mode
     def add_policy(self, policyname, protocol, port):
         try:
-            self.exe("policy")
             output = self.exe("policy-type " + policyname + " protocol " + protocol + " " + port)
             if output.find('already exists')!=-NOT_FOUND:
-                print("rule already exits")
-            else:
-                self.exe("apply")
-
+                print("policy already exits")
         except ValueError as err:
             if str(err.args).find('already exists')!=NOT_FOUND:
                 raise
             else:
                 print(err.args) 
-        finally:
-            print ("exit policy mode")
-            self.exe("exit") #policy
 
     def delete(self, itemtype, name):
         self.exe("no " + itemtype + " " + name)
 
     #run from policy mode
     def add_rule(self, rulename, policyname, addressfrom, addressto, addrtype, log, ruleexists):
-        try:
-
-            #remove existing rule and re-add it
-            if ruleexists==True:
-                self.delete("rule ", rulename)
-            self.exe("policy")
-            self.exe("rule " + rulename)
-           
+        #remove existing rule and re-add it
+        if ruleexists==True:
+            self.delete("rule", rulename)
+        self.exe("rule " + rulename)
+        try:   
             rule = "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto
             if addrtype=="alias":
                 rule = rule + " firewall allowed"
             self.exe(rule)
-
             if log==True:
                 self.exe("logging log-message enable")
-
-            self.exe("apply")
-
+            self.apply() #if we got this far apply the changes
         except ValueError as err:
-            if str(err.args).find('already exists')!=NOT_FOUND:
-                raise
+            if str(err.args).find('already exists')==NOT_FOUND:
+                print ("Raise error")
             else:
                 print(err.args) 
         finally:
-            print("exit policy mode")
-            self.exe("exit") #policy
+            self.exit() #exit rule
 
     #run_command
     def exe(self, command, printoutput=True):
@@ -177,9 +163,18 @@ class fireboxcommands:
 
         return output
 
-    def exit(self):
-        self.exe("exit")
+    def policy(self):
+        self.exe("policy")
 
+    def apply(self):
+        self.exe("apply")
+
+    def exit(self):
+        try:
+            self.exe("exit")
+        except:
+            print("Maybe one too many exits?")  
+            
     #always close connections in a finally block
     def close_connections(self):
         if self.channel:
