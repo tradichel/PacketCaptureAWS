@@ -13,7 +13,6 @@ Parameters:
   ParamAdminCidr: 
     Type: String
     Description: "Cidr Block for Admin Users"
-  
 Resources:
   FireboxSnatLambda:
     Type: "AWS::Lambda::Function"
@@ -31,7 +30,7 @@ Resources:
           AdminCidr: !Ref ParamAdminCidr
           Key: "firebox-cli-ec2-key.pem"
       FunctionName: ConfigureSnat
-      Handler: fireboxconfig.configure_firebox
+      Handler: fireboxsnat.configure_snat
       KmsKeyArn: !ImportValue FireboxKmsKeyArn
       MemorySize: 128
       Role: !ImportValue FireboxLambdaCLIRoleArn

@@ -38,7 +38,7 @@ Resources:
       MemorySize: 128
       Role: !ImportValue FireboxLambdaCLIRoleArn
       Runtime: python2.7
-      Timeout: 120
+      Timeout: 180
       VpcConfig:
         SecurityGroupIds:
           - !ImportValue FireboxManagementSecurityGroup

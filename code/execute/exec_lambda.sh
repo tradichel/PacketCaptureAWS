@@ -2,8 +2,8 @@
 functionname=$1
 
 echo "* Run lambda function to configure firebox"
-echo "* aws lambda invoke --function-name $functionname lambdalog.txt"
-aws lambda invoke --function-name $functionname lambda-$functioname.txt
+echo "* aws lambda invoke --function-name $functionname lambda-$functionname.txt"
+aws lambda invoke --function-name $functionname lambda-$functionname.txt
 echo "* lambda $functionname execution complete"
-cat lambda-$functioname.txt
+cat lambda-$functionname.txt
 echo "* end of lambda $functionname logs"

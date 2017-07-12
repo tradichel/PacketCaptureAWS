@@ -66,14 +66,21 @@ class fireboxcommands:
                 print(object + " " + name + " exists.")
                 exist=True
         except ValueError as err:
-            print(err.args)  
-        
+            e = ''.join(err.args)
+            if (e.find("not found")==NOT_FOUND and e.find("Fail to find")==NOT_FOUND):
+                #error is something other than not found
+                print(e)
+            else:
+                print(object + " " + name + " does not exist.")
+
         return exist      
 
     #run from configuration mode
-    def add_snat(self, snatname, extip, intip, port):
+    def add_snat(self, snatname, addrtype, extip, intip, port, snatexists):
         try:
-            command="snat static-nat " + snatname + " external-ip " + extip + " " + intip + " port " + port
+            if (snatexists==True):
+                self.delete("snat", snatname)
+            command="snat " + snatname + " static-nat " + addrtype + " " + extip + " " + intip + " port " + port
             self.exe(command)
         except ValueError as err:
             if str(err.args).find('already exists')!=NOT_FOUND:
@@ -92,10 +99,12 @@ class fireboxcommands:
             raise
 
     #run from policy mode
-    def add_rule_and_policy(self, policyname, protocol, port, rulename, addressfrom, addressto, addrtype, log):
+    def add_rule_and_policy(self, policyname, protocol, port, rulename, addressfrom, addressto, addrtypefrom, addrtypeto, log, ruleexists):
         try:
-            add_policy(policyname, protocol, port)
-            add_rule(rulename, policyname, addressfrom, addressto, addrtype, log)
+            if ruleexists == True:
+                self.delete("rule", rulename)
+            self.add_policy(policyname, protocol, port)
+            self.add_rule(rulename, policyname, addressfrom, addressto, addrtypefrom, addrtypeto, log, ruleexists)
         except ValueError as err:
             raise
 
@@ -115,14 +124,14 @@ class fireboxcommands:
         self.exe("no " + itemtype + " " + name)
 
     #run from policy mode
-    def add_rule(self, rulename, policyname, addressfrom, addressto, addrtype, log, ruleexists):
+    def add_rule(self, rulename, policyname, addressfrom, addressto, addrtypefrom, addrtypeto, log, ruleexists):
         #remove existing rule and re-add it
         if ruleexists==True:
             self.delete("rule", rulename)
         self.exe("rule " + rulename)
         try:   
-            rule = "policy-type " + policyname + " from " + addrtype + " " + addressfrom + " to " + addrtype + " " + addressto
-            if addrtype=="alias":
+            rule = "policy-type " + policyname + " from " + addrtypefrom + " " + addressfrom + " to " + addrtypeto + " " + addressto
+            if addrtypefrom=="alias" or addrtypeto=="alias":
                 rule = rule + " firewall allowed"
             self.exe(rule)
             if log==True:
@@ -159,9 +168,28 @@ class fireboxcommands:
         #WatchGuard errors have ^ in output
         #throw an exception if we get a WatchGuard error
         if output.find('^')!=NOT_FOUND or output.find('Error')!=NOT_FOUND:
-            raise ValueError('Error executing firebox command', command)
+            raise ValueError('Error executing firebox command: ' + output, command)
 
         return output
+
+    def enable_ntp(self):
+        self.exe("ntp enable")
+        self.exe("ntp device-as-server enable")
+        #fix ntp rule to only allow NTP servers via DNS
+        #these are not working currently...asking WG engineering team...
+        #self.policy()
+        #try:
+            #self.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
+            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", ALIAS_NTP, "alias", LOG_TRAFFIC, True)
+            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Optional", ALIAS_NTP, "alias", LOG_TRAFFIC, False) #do not delete, update
+        #finally:
+            #self.ext() #exit policy
+            
+    def enable_threat_intel(self):
+        self.exe("global-setting report-data enable")
+
+    def configure(self):
+        self.exe("configure")
 
     def policy(self):
         self.exe("policy")

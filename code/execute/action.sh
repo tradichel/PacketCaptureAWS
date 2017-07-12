@@ -212,6 +212,7 @@ function validate_action(){
 }
 
 function log_errors(){
+
     local stackname=$1;local action=$2
 
     aws cloudformation describe-stacks --stack-name $stackname > $stackname.txt  2>&1  
@@ -251,8 +252,11 @@ function wait_to_complete () {
 #---Start of Script---#
 if [ "$action" == "delete" ]; then
 
-    ./execute/delete_lambda_eni.sh "ConfigureFirebox"
-    ./execute/delete_lambda_eni.sh "ConfigureSnat"
+    # This is not working correctly...
+    # AWS Support says 40 minutes to delete lambda ENI
+    # Put in feature request to fix this
+    #./execute/delete_lambda_eni.sh "ConfigureFirebox"
+    #./execute/delete_lambda_eni.sh "ConfigureSnat"
 
     stack=(
         "lambda"
@@ -269,9 +273,9 @@ if [ "$action" == "delete" ]; then
     modify_stack $action "instances" stack[@] 
 
     ./execute/delete_files.sh
-
+        
     if [ deleteall == "Y" ]; then
-
+   
         stack=(
             "s3endpointegress"
             "s3endpoint"
@@ -301,15 +305,17 @@ if [ "$action" == "delete" ]; then
             "vpc"
         )
     else
+
        stack=(
             "elasticip"
             "firebox"
         )  
+
     fi
 
-    modify_stack $action "network" stack[@] 
-
     ./execute/keypair.sh $action $keyname
+
+    modify_stack $action "network" stack[@] 
 
 else #create/update
 
@@ -349,7 +355,9 @@ else #create/update
     ./execute/upload_files.sh $keyname
 
     #first we need to delete the existing lambda to pick up updates
-    ./execute/delete_lambda_eni.sh
+    #This is not working. AWS says up to 40 minutes to delete lambda ENI
+    #Put in feature request to fix this
+    #./execute/delete_lambda_eni.sh
     
     action="delete"
     stack=("lambda")
@@ -373,9 +381,6 @@ else #create/update
 
     ./execute/exec_lambda.sh "ConfigureFirebox"
     
-    echo "exit while testing"
-    exit
-    
     stack=(
         "packetcaptureserver"
         "webserver"
@@ -383,7 +388,9 @@ else #create/update
 
     modify_stack $action "instances" stack[@] 
 
-   ./execute/delete_lambda_eni.sh
+    #This is not working. AWS says up to 40 minutes to delete lambda ENI
+    #Put in feature request to fix this
+    #./execute/delete_lambda_eni.sh
     
     action="delete"
     stack=("lambdasnat")

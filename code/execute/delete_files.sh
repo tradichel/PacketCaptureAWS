@@ -1,4 +1,8 @@
 #!/bin/sh
+
+#delete local key to make sure we don't re-use it by mistake
+rm *.pem
+
 bucket=$(./execute/get_output_value.sh "firebox-cli-s3bucket" "FireboxPrivateBucket")
 logbucket=$(./execute/get_output_value.sh "firebox-cli-s3bucket" "FireboxLogBucket")
 
