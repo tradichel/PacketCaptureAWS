@@ -58,20 +58,24 @@ class fireboxcommands:
 
     #run from main mode
     def check_exists(self, object, name ):
+
         exist=False
 
         try:
             output = self.exe("show " + object + " " + name, False)
-            if(output.find("not found")==NOT_FOUND):
-                print(object + " " + name + " exists.")
+            if(output.find("name")!=NOT_FOUND or output.find("escription")!=NOT_FOUND):
                 exist=True
         except ValueError as err:
-            e = ''.join(err.args)
-            if (e.find("not found")==NOT_FOUND and e.find("Fail to find")==NOT_FOUND):
+            output = ''.join(err.args)
+            if (output.find("not found")==NOT_FOUND and output.find("Fail to find")==NOT_FOUND):
                 #error is something other than not found
-                print(e)
-            else:
-                print(object + " " + name + " does not exist.")
+                raise
+
+        if (exist==True):
+            print(object + " " + name + " exists.")
+        else:
+            print(object + " " + name + " does not exist.")
+            #print(output)
 
         return exist      
 
@@ -79,7 +83,9 @@ class fireboxcommands:
     def add_snat(self, snatname, addrtype, extip, intip, port, snatexists):
         try:
             if (snatexists==True):
-                self.delete("snat", snatname)
+                #this fails with snat in use
+                #self.delete("snat", snatname)
+                return
             command="snat " + snatname + " static-nat " + addrtype + " " + extip + " " + intip + " port " + port
             self.exe(command)
         except ValueError as err:
@@ -88,12 +94,15 @@ class fireboxcommands:
             else:
                 print(err.args)   
     
-    #run from main mode (?)
+    #run from policy mode
     def add_alias(self, name, description, aliastype, address, aliasexists):
         try:
             if aliasexists == True:
                 self.delete("alias", name)
-            command="alias " + name + " " + aliastype + " \"" + address + "\""        
+            if aliastype=="FQDN":
+                command="alias " + name + " " + aliastype + " \"" + address + "\""        
+            else:
+                command="alias " + name + " " + aliastype + " " + address   
             self.exe(command)
         except ValueError as err:
             raise
@@ -164,7 +173,7 @@ class fireboxcommands:
             output=self.channel.recv(buff_size)
             if printoutput==True:
                 print(output)
-            
+
         #WatchGuard errors have ^ in output
         #throw an exception if we get a WatchGuard error
         if output.find('^')!=NOT_FOUND or output.find('Error')!=NOT_FOUND:
@@ -177,13 +186,13 @@ class fireboxcommands:
         self.exe("ntp device-as-server enable")
         #fix ntp rule to only allow NTP servers via DNS
         #these are not working currently...asking WG engineering team...
-        #self.policy()
-        #try:
-            #self.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
-            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", ALIAS_NTP, "alias", LOG_TRAFFIC, True)
-            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Optional", ALIAS_NTP, "alias", LOG_TRAFFIC, False) #do not delete, update
-        #finally:
-            #self.ext() #exit policy
+        self.policy()
+        try:
+            self.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
+            cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", ALIAS_NTP, "alias", LOG_TRAFFIC, True)
+            cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Optional", ALIAS_NTP, "alias", LOG_TRAFFIC, False) #do not delete, update
+        finally:
+            self.ext() #exit policy
             
     def enable_threat_intel(self):
         self.exe("global-setting report-data enable")
