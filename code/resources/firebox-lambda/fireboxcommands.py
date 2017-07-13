@@ -2,6 +2,7 @@ import boto3
 import paramiko
 import time
 import logging
+from botocore.client import Config
 
 NOT_FOUND=-1
 
@@ -31,7 +32,8 @@ class fireboxcommands:
 
         #For troubleshooting AWS requests if needed
         boto3.set_stream_logger(name='botocore')
-        s3=boto3.client('s3')
+        config = Config(connect_timeout=200, read_timeout=200, s3={'addressing_style': 'virtual'})
+        s3=boto3.client('s3', config=config)
 
         try:
             s3.download_file(bucket, sshkey, local_key_file)
@@ -105,7 +107,8 @@ class fireboxcommands:
                 command="alias " + name + " " + aliastype + " " + address   
             self.exe(command)
         except ValueError as err:
-            raise
+            print(err.args)
+            print("For now if alias is in use leave it...talking to engineering about this")
 
     #run from policy mode
     def add_rule_and_policy(self, policyname, protocol, port, rulename, addressfrom, addressto, addrtypefrom, addrtypeto, log, ruleexists):
@@ -181,6 +184,8 @@ class fireboxcommands:
 
         return output
 
+    #this assumes NTP is not already enabled nad rules have
+    #not been set
     def enable_ntp(self):
         self.exe("ntp enable")
         self.exe("ntp device-as-server enable")
@@ -188,11 +193,16 @@ class fireboxcommands:
         #these are not working currently...asking WG engineering team...
         self.policy()
         try:
-            self.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
-            cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", ALIAS_NTP, "alias", LOG_TRAFFIC, True)
-            cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Optional", ALIAS_NTP, "alias", LOG_TRAFFIC, False) #do not delete, update
+            output = self.add_alias(ALIAS_NTP, "NTP Pool", "FQDN", "*.ntp.org", alias_ntp_exists)
+            #rule to allow Firebox to rach out to NTP servers
+            output = self.add_rule(RULE_NTP, POLICY_NTP, "Any-External", ALIAS_NTP, "alias", "alias", LOG_TRAFFIC, False)
+            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Trusted", "Any-External", "alias", "alias", LOG_TRAFFIC, True)
+            #cmd.add_rule(RULE_NTP, POLICY_NTP, "Any-Optional", "Any-External", "alias", "alias", LOG_TRAFFIC, False) #do not delete, update
+        except:
+            print("Error enabling NTP:")
+            print(output)
         finally:
-            self.ext() #exit policy
+            self.exit() #exit policy
             
     def enable_threat_intel(self):
         self.exe("global-setting report-data enable")

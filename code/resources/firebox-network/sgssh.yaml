@@ -18,11 +18,11 @@ Resources:
     Properties:
       GroupDescription: SSH Admin Security Group
       SecurityGroupIngress: 
-      - CidrIp: !Ref ParamAdminCidr2
+      - CidrIp: !Ref ParamAdminCidr
         IpProtocol: tcp
         FromPort: 22
         ToPort: 22
-      SecurityGroupIngress: 
+      SecurityGroupEgress: 
       - CidrIp: !ImportValue FireboxVPCCidr
         IpProtocol: tcp
         FromPort: 123
