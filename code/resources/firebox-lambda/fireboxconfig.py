@@ -41,9 +41,11 @@ def configure_firebox(event, context):
             cmd.enable_ntp()
             
             cmd.policy()
-            cmd.add_rule(RULE_HTTPS_OUT, POLICY_HTTPS, "Any-Trusted", "Any-External", "alias", "alias", LOG_TRAFFIC, rule_https_out_exists)
-            cmd.add_rule(RULE_HTTP_OUT, POLICY_HTTP, "Any-Trusted", "Any-External", "alias", "alias", LOG_TRAFFIC, rule_http_out_exists)
-            
+            #this is a bit of hack to pass in two addresses since I learned late in the game how to add two
+            #could pass in an array of addresses instead or do this some other better way later.
+            cmd.add_rule(RULE_HTTPS_OUT, POLICY_HTTPS, "Any-Trusted alias Any-Optional", "Any-External", "alias", "alias", LOG_TRAFFIC, rule_https_out_exists)
+            cmd.add_rule(RULE_HTTP_OUT, POLICY_HTTP, "Any-Trusted alias Any-Optional", "Any-External", "alias", "alias", LOG_TRAFFIC, rule_http_out_exists)
+
         except ValueError as err:
             raise
         finally:

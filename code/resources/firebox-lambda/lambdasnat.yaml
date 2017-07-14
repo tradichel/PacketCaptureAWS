@@ -7,12 +7,7 @@ Parameters:
   ParamWebServerCidr: 
     Type: String
     Description: "Cidr Block for Web Servers"
-  ParamManagementCidr: 
-    Type: String
-    Description: "Cidr Block for Management"
-  ParamAdminCidr: 
-    Type: String
-    Description: "Cidr Block for Admin Users"
+
 Resources:
   FireboxSnatLambda:
     Type: "AWS::Lambda::Function"
@@ -26,8 +21,6 @@ Resources:
           Bucket: !ImportValue FireboxPrivateBucket
           FireboxIp: !ImportValue FireboxPrimaryManagementIpAddress
           WebServerIP: !ImportValue WebServerIPAddress
-          PacketCaptureServerIP: !ImportValue PacketCaptureServerIPAddress
-          AdminCidr: !Ref ParamAdminCidr
           Key: "firebox-cli-ec2-key.pem"
       FunctionName: ConfigureSnat
       Handler: fireboxsnat.configure_snat

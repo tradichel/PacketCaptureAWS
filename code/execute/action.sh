@@ -139,9 +139,9 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamPrefixListId,ParameterValue=$prefixlistid";return
     fi
 
-    if [ "$stack" == "packetcaptureserver" ]; then
-        echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$keyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
-    fi  
+    #if [ "$stack" == "packetcaptureserver" ]; then
+    #    echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$keyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
+    #fi  
 
     if [ "$stack" == "webserver" ]; then
         echo "$stackparameter ParameterKey=ParamKeyName,ParameterValue=$keyname ParameterKey=ParamAmi,ParameterValue=$linuxami";return
@@ -164,8 +164,12 @@ function get_parameters(){
         echo "$stackparameter ParameterKey=ParamWebServerSubnetCidr,ParameterValue=$webservercidr ParameterKey=ParamAdminCidr,ParameterValue=$admincidr $s3cidrparams";return
     fi
 
-    if [ "$stack" == "lambda" ] || [ "$stack" == "lambdasnat" ] ; then
+    if [ "$stack" == "lambda" ]; then
         echo "$stackparameter ParameterKey=ParamManagementCidr,ParameterValue=$managementcidr ParameterKey=ParamWebServerCidr,ParameterValue=$webservercidr  ParameterKey=ParamAdminCidr,ParameterValue=$admincidr";return
+    fi
+
+    if [ "$stack" == "lambdasnat" ]; then
+        echo "$stackparameter ParameterKey=ParamWebServerCidr,ParameterValue=$webservercidr";return
     fi
 
     echo "$stackparameter"
@@ -260,6 +264,7 @@ if [ "$action" == "delete" ]; then
 
     stack=(
         "lambda"
+        "capturepackets"
         "lambdasnat"
         "kmskey"
     )
@@ -267,7 +272,7 @@ if [ "$action" == "delete" ]; then
 
     stack=(
         "webserver"
-        "packetcaptureserver"
+        #"packetcaptureserver"
     )
 
     modify_stack $action "instances" stack[@] 
@@ -382,7 +387,7 @@ else #create/update
     ./execute/exec_lambda.sh "ConfigureFirebox"
     
     stack=(
-        "packetcaptureserver"
+        #"packetcaptureserver"
         "webserver"
     )
 
@@ -390,7 +395,7 @@ else #create/update
 
     #This is not working. AWS says up to 40 minutes to delete lambda ENI
     #Put in feature request to fix this
-    #./execute/delete_lambda_eni.sh
+    ./execute/delete_lambda_eni.sh
     
     action="delete"
     stack=("lambdasnat")
@@ -402,6 +407,17 @@ else #create/update
     modify_stack $action "lambda" stack[@] 
 
     ./execute/exec_lambda.sh "ConfigureSnat"
+
+    action="delete"
+    stack=("capturepackets")
+    modify_stack $action "lambda" stack[@] 
+
+    #then we can create or update the lambda
+    action="create"
+    stack=("capturepackets")
+    modify_stack $action "lambda" stack[@] 
+
+    ./execute/exec_lambda.sh "CapturePackets"
     
 fi
 

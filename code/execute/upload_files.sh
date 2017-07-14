@@ -5,8 +5,6 @@ keyname=$1
 
 ./execute/make_zip.sh
 
-
-
 #upload the lambda code to the bucket used by lambda cloudformation file
 bucket=$(./execute/get_output_value.sh "firebox-cli-s3bucket" "FireboxPrivateBucket")
 aws s3 cp resources/firebox-lambda/fireboxconfig.zip s3://$bucket/fireboxconfig.zip --sse AES256 > upload.txt  2>&1  

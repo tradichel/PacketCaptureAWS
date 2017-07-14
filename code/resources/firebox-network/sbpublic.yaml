@@ -61,7 +61,10 @@ Parameters:
   paramsregioncloudwatch:
     Type: String
     Default: "176.32.125.0/25"
-    
+  #And python...
+  parampythonpip:
+    Type: String
+    Default: "151.101.0.0/16"
 
 Conditions:
   #make sure all the IPs exist before we attempt to create
@@ -470,7 +473,6 @@ Resources:
          To: 443
       RuleAction : "Allow" 
       RuleNumber : "2014" 
-
       
 
 Outputs:

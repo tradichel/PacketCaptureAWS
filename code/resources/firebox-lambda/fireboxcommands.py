@@ -185,6 +185,31 @@ class fireboxcommands:
 
         return output
 
+    #capture packets for a limited amount of time and then exit
+    #since the firebox does not exit gracefully we need to force
+    #this thing to die at the moment...
+    def capture_packets(self, buff_size=2024, iterations=10):
+
+        #iterations=10
+        #buff_size=2024
+        c='tcpdump -x\n'
+        self.channel.send(c)
+
+        #wait for results to be buffered
+        while not (self.channel.recv_ready()):
+            if self.channel.exit_status_ready():
+                print ('Channel exiting. No data returned')
+                return
+            time.sleep(3) 
+
+        #print results 
+        while self.channel.recv_ready() and iterations > 0:
+            iterations = iterations - 1
+            output=self.channel.recv(buff_size)
+            print(output)
+
+        return output
+
     #this assumes NTP is not already enabled nad rules have
     #not been set
     def enable_ntp(self):

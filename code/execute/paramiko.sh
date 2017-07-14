@@ -18,7 +18,7 @@ sudo yum update -y
 #install the one we want
 #sudo yum install python35.x86_64 -y
 
-sudo pip install virtualenv --upgrade
+c
 
 #switch to temp directory
 cd /tmp
@@ -27,7 +27,7 @@ cd /tmp
 virtualenv -p /usr/bin/python2.7 python27
 
 #activate virtual environment
-source python35/bin/activate
+source python27/bin/activate
 
 #install dependencies
 sudo yum install gcc -y
@@ -40,6 +40,9 @@ pip install --upgrade pip
 
 #install cryptography and parmaiko paramiko
 pip install paramiko
+
+#need this on ec2
+#pip install boto3
 
 #create zip file
 cd python27/lib/python2.7/site-packages

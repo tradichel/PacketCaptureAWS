@@ -14,7 +14,6 @@ RULE_HTTP_IN='http-in'
 
 #snats
 SNAT_WEB='web-srv-snat'
-SNAT_PKT='packet-cap-svr-snat'
 
 ALIAS_ADMIN_IP='admin-ip'
 
@@ -26,8 +25,6 @@ def configure_snat(event, context):
     #should validate these values ...
     bucket=os.environ['Bucket']
     webip=os.environ['WebServerIP']
-    pktip=os.environ['PacketCaptureServerIP']
-    admincidr=os.environ['AdminCidr']
     sshkey=os.environ['Key']
     fireboxip=os.environ['FireboxIp']
 
@@ -41,20 +38,14 @@ def configure_snat(event, context):
         rule_http_in_exists = cmd.check_exists( 'rule', RULE_HTTP_IN)
         rule_ssh_manage_exists = cmd.check_exists( 'rule', RULE_SSH_MANAGE)
         snat_web_exists = cmd.check_exists( 'snat', SNAT_WEB)
-        snat_pkt_exists = cmd.check_exists( 'snat', SNAT_PKT)
-        alias_adminip_exists = cmd.check_exists('alias', ALIAS_ADMIN_IP)
 
         try:
 
             #configure mode
             cmd.configure()
             cmd.policy()
-            cmd.add_alias(ALIAS_ADMIN_IP, 'administrative IP address', 'host-ip', adminip, alias_adminip_exists)
-            cmd.exit() #exit policy
             cmd.add_snat(SNAT_WEB, 'external-addr', 'Any-External', webip, '80', snat_web_exists)
-            cmd.add_snat(SNAT_PKT,'external-addr', 'Any-External', pktip, '22', snat_pkt_exists)
             cmd.policy()
-            cmd.add_rule( RULE_SSH_MANAGE, POLICY_SSH, ALIAS_ADMIN_IP, SNAT_PKT, 'alias', 'snat', LOG_TRAFFIC, rule_ssh_manage_exists)
             cmd.add_rule( RULE_HTTP_IN, POLICY_HTTP,  'Any-External', SNAT_WEB, 'alias', 'snat', LOG_TRAFFIC, rule_http_in_exists)
                         
         except ValueError as err:
