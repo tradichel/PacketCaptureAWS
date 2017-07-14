@@ -35,7 +35,20 @@ Parameters:
     Default: ""
   params3eastcidr3:
     Type: String
-    Default: ""
+    Default: ""  
+  #this is hard coded to us-west-2
+  #and is a problem...
+  #need AWS Yum CIDR for each region
+  #published here:
+  #https://ip-ranges.amazonaws.com/ip-ranges.json
+  paramsregioncidr4yum:
+    Type: String
+    Default: "52.218.128.0/17"
+  #same problem as above
+  #us-west-2 for cloudwatch
+  paramsregioncloudwatch:
+    Type: String
+    Default: "176.32.125.0/25"
 
 Conditions:
   #make sure all the IPs exist before we attempt to create
@@ -237,6 +250,23 @@ Resources:
       ToPort: 443
       IpProtocol: tcp
 
+  RegionCidrYum:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref S3CidrSecurityGroup
+      CidrIp: !Ref paramsregioncidr4yum
+      FromPort: 443
+      ToPort: 443
+      IpProtocol: tcp
+
+  RegionCidrYum:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref S3CidrSecurityGroup
+      CidrIp: !Ref paramsregioncloudwatch
+      FromPort: 443
+      ToPort: 443
+      IpProtocol: tcp
 
 Outputs:
   S3CidrSecurityGroup:

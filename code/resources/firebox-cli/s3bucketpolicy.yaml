@@ -80,7 +80,7 @@ Resources:
                 aws:MultiFactorAuthPresent: 
                   - true
           - 
-            Sid: AllowLambaCLIRoleGet
+            Sid: AllowLambaCLIRoleGetObject
             Action:
               - "s3:GetObject"
             Effect: "Allow"
@@ -88,7 +88,7 @@ Resources:
             Principal: 
               AWS: !ImportValue FireboxLambdaCLIRoleArn
           - 
-            Sid: AllowLambaCLIRoleGet
+            Sid: DenyNoS3Endpoint
             Action:
               - "s3:GetObject"
             Effect: "Deny"
@@ -100,7 +100,7 @@ Resources:
                 aws:sourceVpce: 
                   !ImportValue FireboxCLIS3Endpoint
           - 
-            Sid: AllowLambaCLIRoleGetObject
+            Sid: AllowLambaCLIRoleListBucket
             Action:
               - "s3:ListBucket"
             Effect: "Allow"

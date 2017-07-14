@@ -48,6 +48,20 @@ Parameters:
   paramsAWSGlobalDNS:
     Type: String
     Default: "205.251.192.0/19"
+  #this is hard coded to us-west-2
+  #and is a problem...
+  #need AWS Yum CIDR for each region
+  #published here:
+  #https://ip-ranges.amazonaws.com/ip-ranges.json
+  paramsregioncidr4yum:
+    Type: String
+    Default: "52.218.128.0/17"
+  #same problem as above
+  #us-west-2 for cloudwatch
+  paramsregioncloudwatch:
+    Type: String
+    Default: "176.32.125.0/25"
+    
 
 Conditions:
   #make sure all the IPs exist before we attempt to create
@@ -418,6 +432,19 @@ Resources:
       RuleAction : "Allow" 
       RuleNumber : "2011" 
 
+  NaclAWSYum:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref paramsregioncidr4yum
+      Egress: true 
+      NetworkAclId: !Ref FireboxPublicSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      RuleAction : "Allow" 
+      RuleNumber : "2012" 
+
   NaclAWSDNS:
     Type: "AWS::EC2::NetworkAclEntry"
     Properties: 
@@ -430,6 +457,21 @@ Resources:
          To: 53
       RuleAction : "Allow" 
       RuleNumber : "2013" 
+
+  NaclAWSCloudWatch:
+    Type: "AWS::EC2::NetworkAclEntry"
+    Properties: 
+      CidrBlock: !Ref paramsregioncloudwatch
+      Egress: true 
+      NetworkAclId: !Ref FireboxPublicSubnetNacl
+      Protocol: 6
+      PortRange: 
+         From: 80
+         To: 443
+      RuleAction : "Allow" 
+      RuleNumber : "2014" 
+
+      
 
 Outputs:
   FireboxPublicSubnet:

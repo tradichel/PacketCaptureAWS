@@ -51,6 +51,26 @@ Resources:
             Action: 
               - "xray:PutTraceSegments"
             Resource: "*" 
+          - 
+            Effect: "Allow"
+            Action: 
+              - "logs:CreateLogGroup"
+            Resource: "arn:aws:logs:*:*:*"
+          - 
+            Effect: "Allow"
+            Action: 
+              - "logs:CreateLogStream"
+            Resource: "arn:aws:logs:*:*:*"
+          - 
+            Effect: "Allow"
+            Action: 
+              - "logs:PutLogEvents"
+            Resource: "arn:aws:logs:*:*:*"
+          - 
+            Effect: "Allow"
+            Action: 
+              - "logs:DescribeLogStreams"
+            Resource: "arn:aws:logs:*:*:*"
       Roles: 
         - 
           !Ref FireboxCliRole

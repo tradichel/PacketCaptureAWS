@@ -60,15 +60,30 @@ Resources:
             sed -i "s/server 1.$ntpsrv iburst//g" /etc/ntp.conf
             sed -i "s/server 2.$ntpsrv iburst//g" /etc/ntp.conf
             sed -i "s/server 3.$ntpsrv iburst//g" /etc/ntp.conf
-            cat /etc/ntp.conf
             service ntpd start
             yum update -y
-            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} /tmp/${fireboxkey}
-            chmod 700 /tmp/${fireboxkey}
-            ntpstat
-            echo "management ip {fireboxmanagementip}"
-            echo "ssh -i /tmp/${fireboxkey} admin@${fireboxmanagementip} -p 4118
-            tcpdump -x
+            yum install -y awslogs
+            cat /etc/awslogs/awslogs.conf > awslogs.conf
+            echo "" >> awslogs.conf
+            echo "[/tmp/packets.txt]" >> awslogs.conf
+            echo "datetime_format = %b %d %H:%M:%S" >> awslogs.conf
+            echo "file = /tmp/packets.txt" >> awslogs.conf
+            echo "buffer_duration = 5000" >> awslogs.conf
+            echo "log_stream_name = {instance_id}" >> awslogs.conf
+            echo "initial_position = start_of_file" >> awslogs.conf
+            echo "log_group_name = /tmp/packets.txt" >> awslogs.conf
+            cp awslogs.conf /etc/awslogs/awslogs.conf
+            service awslogs start
+            chkconfig awslogs on
+
+            aws s3 cp s3://${fireboxkeybucket}/${fireboxkey} fb.pem
+            chmod 700 fb.pem
+           
+            echo "ssh -i fb.pem admin@${fireboxmanagementip} -p 4118" > capture.sh
+            echo "tcpdump -G 15 -x" >> capture.sh
+            echo "exit" >> capture.sh
+            chmod 700 capture.sh 
+            ./capture.sh > /tmp/packets.txt
           -
             fireboxmanagementip: 
               'Fn::ImportValue': 'FireboxPrimaryManagementIpAddress'

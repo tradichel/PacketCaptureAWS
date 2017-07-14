@@ -1,0 +1,13 @@
+[general]
+state_file=/tmp/state.txt
+us_gzip_http_content_encoding=false
+
+[logstream]
+log_group_name=test
+log_stream_name=teststream
+file=/var/log/cloud-init-output.log
+
+[logstream]
+log_group_name=packets
+log_stream_name=packetstream
+file=/tmp/packets.txt
