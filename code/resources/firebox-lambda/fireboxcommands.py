@@ -100,13 +100,14 @@ class fireboxcommands:
     def add_alias(self, name, description, aliastype, address, aliasexists):
         try:
             if aliasexists == True:
-                self.delete("alias", name)
+                output=self.delete("alias", name)
             if aliastype=="FQDN":
                 command="alias " + name + " " + aliastype + " \"" + address + "\""        
             else:
                 command="alias " + name + " " + aliastype + " " + address   
-            self.exe(command)
+            output=self.exe(command)
         except ValueError as err:
+            print(output)
             print(err.args)
             print("For now if alias is in use leave it...talking to engineering about this")
 
