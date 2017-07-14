@@ -36,7 +36,7 @@ Resources:
     Properties: 
       Roles:
         - FireboxLambdaCLIRole
-      InstanceProfileName: PacketServerRoleProfile
+      InstanceProfileName: !Join [ "-", [ "pkt-srv-role-profile-", !Ref "AWS::AccountId", !Ref "AWS::Region" ] ]
 
   PacketCaptureServer:
     Type: "AWS::EC2::Instance"

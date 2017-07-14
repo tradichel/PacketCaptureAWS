@@ -8,7 +8,7 @@ Resources:
   FireboxCliRole: 
     Type: "AWS::IAM::Role"
     Properties: 
-      RoleName: !Join [ "-", [ "firebox-lambda-role", !Ref "AWS::AccountId", !Ref "AWS::Region" ] ]
+      RoleName: !Join [ "-", [ "firebox-cli-role", !Ref "AWS::AccountId", !Ref "AWS::Region" ] ]
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
