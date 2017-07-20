@@ -3,16 +3,21 @@
 # but this is how I started for non-programmers who
 #are familiar with command line scripting.
 action=$1
-adminuser=$2
-admincidr=$3
-adminuserarn=$4
-ami=$5
-instancetype=$6
-linuxami=$7
-publiccidr=$8
-managementcidr=$9 
-webservercidr="${10}"
-deleteall="${11}"
+if [ "$action" == "delete" ]; then 
+    adminuser=$2
+    adminuserarn=$3
+    deleteall=$4
+else    
+    adminuser=$2
+    admincidr=$3
+    adminuserarn=$4
+    ami=$5
+    instancetype=$6
+    linuxami=$7
+    publiccidr=$8
+    managementcidr=$9 
+    webservercidr="${10}"
+fi
 
 keyname="firebox-cli-ec2-key"
 lambdafunction="ConfigureFirebox"
@@ -33,7 +38,9 @@ function modify_stack(){
 
 function run_template () {
     local action=$1; local config=$2; local stack=$3;local parameters="";
- 
+    
+    echo "$action $config $stack"
+
     template="file://resources/firebox-$config/$stack.yaml"
     stackname="firebox-$config-$stack"
     exists=$(stack_exists $stackname)
@@ -261,6 +268,7 @@ if [ "$action" == "delete" ]; then
     # Put in feature request to fix this
     #./execute/delete_lambda_eni.sh "ConfigureFirebox"
     #./execute/delete_lambda_eni.sh "ConfigureSnat"
+    echo "delete resources"
 
     stack=(
         "lambda"
@@ -279,8 +287,10 @@ if [ "$action" == "delete" ]; then
 
     ./execute/delete_files.sh
         
-    if [ deleteall == "Y" ]; then
+    if [ "$deleteall" == "Y" ]; then
    
+        echo "deleting all resources..."
+
         stack=(
             "s3endpointegress"
             "s3endpoint"
