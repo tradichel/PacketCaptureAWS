@@ -293,8 +293,8 @@ if [ "$action" == "delete" ]; then
 
         stack=(
             "s3endpointegress"
-            "s3endpoint"
             "s3bucketpolicy"
+            "s3endpoint"
             "clirole"
             "s3bucket"
          )
