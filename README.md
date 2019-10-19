@@ -2,6 +2,13 @@
 
 Questions? DM me @TeriRadichel on Twitter.
 
+# Update cloud security automation code
+
+For more recent and up to date code, training, and cybersecurity in the cloud, please check out 2nd Sight Lab's Cloud Security Architecture and Engineering class. We are constantly updating the material and writing new labs to help students understand and implement cybersecurity in the cloud.
+
+Cloud Security Training:
+https://2ndsightlab.com/cloud-security-training.html
+
 ## About This Repo:
 
     This repo creates the following AWS resources:
