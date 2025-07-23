@@ -1,13 +1,10 @@
 # Packet Capture on AWS
 
-Questions? DM me @TeriRadichel on Twitter.
+Find me: Teri Radichel on LinkedIn @tradichel almost everywhere else (X, Threads, Mastodon. Bluesky, etc.)
 
 # Update cloud security automation code
 
-For more recent and up to date code, training, and cybersecurity in the cloud, please check out 2nd Sight Lab's Cloud Security Architecture and Engineering class. We are constantly updating the material and writing new labs to help students understand and implement cybersecurity in the cloud.
-
-Cloud Security Training:
-https://2ndsightlab.com/cloud-security-training.html
+This was written before AWS offered packet capture as a service and people said it couldn't be done.
 
 ## About This Repo:
 
